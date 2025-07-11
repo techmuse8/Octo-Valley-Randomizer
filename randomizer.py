@@ -53,35 +53,35 @@ def packSARC(inputDir: str, outputPath: str, compress: bool = True):
 
     print(f"Packed SARC: {outputPath}")
     
-def convertFromByaml(inputByaml):
-    print(inputByaml)
-    with open(inputByaml, "rb") as f:
+def convertFromBYAML(inputBYAML):
+    # print(inputBYAML)
+    with open(inputBYAML, "rb") as f:
         info = oead.byml.from_binary(f.read())
-        worldYaml = oead.byml.to_text(info)
-        print(worldYaml)
-        outputYamlName = os.path.splitext(inputByaml)
+        ouputYAML = oead.byml.to_text(info)
+        # print(ouputYAML)
+        outputYamlName = os.path.splitext(inputBYAML)
         print(outputYamlName[0])
     with open(f"{outputYamlName[0]}.yaml", "w") as file:
-        file.write(worldYaml)
+        file.write(ouputYAML)
         
-def convertToByaml(inputYaml):
+def convertToBYAML(inputYaml):
     with open(inputYaml, "r", encoding="utf-8") as file:
         content = file.read()
      
-    convdByaml = oead.byml.from_text(content)
-    outputByamlName = os.path.splitext(inputYaml)
-    print(outputByamlName[0])
+    convdBYAML = oead.byml.from_text(content)
+    outputBYAMLName = os.path.splitext(inputYaml)
+    print(outputBYAMLName[0])
     
-    with open(f"{outputByamlName[0]}.byaml", "wb") as f:
-        f.write(oead.byml.to_binary(data=convdByaml, big_endian=True, version=1))
+    with open(f"{outputBYAMLName[0]}.byaml", "wb") as f:
+        f.write(oead.byml.to_binary(data=convdBYAML, big_endian=True, version=1))
 
 
 
 extractSARC('Static.pack')
 World00ArchivePath = 'Static.pack_extracted/Map/Fld_World00_Wld.szs'
 extractSARC(World00ArchivePath)
-convertFromByaml(f"{World00ArchivePath}_extracted/Fld_World00_Wld.byaml")
-convertFromByaml('Static.pack_extracted/Mush/MapInfo.byaml')
+convertFromBYAML(f"{World00ArchivePath}_extracted/Fld_World00_Wld.byaml")
+convertFromBYAML('Static.pack_extracted/Mush/MapInfo.byaml')
 
 startLine = 5
 
@@ -93,6 +93,12 @@ with open(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml") as f:
         if word.endswith('_Msn')
         ]
 
+bossStageNames = stageNames[-5:]
+bossStageNames = bossStageNames[0:4]
+stageNames = stageNames[:-5]
+
+print(bossStageNames)
+print(stageNames)
 
 def addRandomizedKettles(filePath, prefix, replacementStageNames):
     with open(filePath, 'r') as file:
@@ -134,6 +140,35 @@ def updateStageNumbers(): # Updates the MapInfo yaml with the correct stage numb
 
     with open('Static.pack_extracted/Mush/MapInfo.yaml', 'w') as f:
         f.writelines(updatedStageNo)
+        
+def updateBossStageNumbers(): # Updates the MapInfo yaml with the correct boss stage numbers, this is seperate due to the different numbering pattern for bosses
+                              # TODO: somehow merge this with updateStageNumber?
+    with open('Static.pack_extracted/Mush/MapInfo.yaml', 'r') as f:
+        mapInfoYamlLines = f.readlines()
+
+    updatedBossStageNo = []
+    i = 0
+
+    while i < len(mapInfoYamlLines):
+        line2 = mapInfoYamlLines[i]
+        updatedBossStageNo.append(line2)
+
+        for stages in bossStageNames:
+            if line2.strip().endswith(stages): # Check if the line ends with a stage name
+                bossStageIndex = bossStageNames.index(stages)
+
+                if i + 1 < len(mapInfoYamlLines):
+                    nextLine = mapInfoYamlLines[i + 1]
+                    indent = ' ' * (len(nextLine) - len(nextLine.lstrip()))
+                    updatedBossStageNo.append(f"{indent}MsnStageNo: {bossStageIndex + 100 + 1}\n") # Update the stage number based on the order of the randomized stages
+                    i += 1 
+                break
+
+        i += 1
+
+    with open('Static.pack_extracted/Mush/MapInfo.yaml', 'w') as f:
+        f.writelines(updatedBossStageNo)
+        
 
 def rebuildStaticPack():
     print('inRBSP')
@@ -142,7 +177,7 @@ def rebuildStaticPack():
             if filename.endswith('.yaml'):
                 filePath = os.path.join(dirpath, filename)
                 try:
-                    os.remove(filePath)
+                    #os.remove(filePath)
                     print(f"Deleted: {filePath}")
                 except OSError as e:
                     print(f"Error deleting {filePath}: {e}")
@@ -153,11 +188,17 @@ def rebuildStaticPack():
 print(stageNames)
 
 random.shuffle(stageNames)
-
+random.shuffle(bossStageNames)
 print(stageNames)
+
+for item in bossStageNames:
+    stageNames.append(item)
+bossStageNames.append('Fld_BossRailKing_Bos_Msn') # Make sure the final boss stage isn't randomized
+print(bossStageNames)
 
 addRandomizedKettles(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml", '- DestMapFileName:', stageNames)
 updateStageNumbers()
-convertToByaml(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml")
-convertToByaml('Static.pack_extracted/Mush/MapInfo.yaml')
+updateBossStageNumbers()
+convertToBYAML(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml")
+convertToBYAML('Static.pack_extracted/Mush/MapInfo.yaml')
 rebuildStaticPack()
