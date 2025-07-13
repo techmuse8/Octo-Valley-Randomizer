@@ -1,6 +1,6 @@
 import os
 import oead
-import yaml
+from ruamel.yaml import YAML
 import random
 from pathlib import Path
 
@@ -87,10 +87,10 @@ startLine = 5
 
 with open(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml") as f:
     lines = f.readlines()[startLine:]
-    stageNames = [
+    stageNames = [ # Loop through every word in the YAML and filter out all of the stage names
         word for line in lines
         for word in line.split()
-        if word.endswith('_Msn')
+        if word.endswith('_Msn') 
         ]
 
 bossStageNames = stageNames[-5:]
@@ -100,20 +100,45 @@ stageNames = stageNames[:-5]
 print(bossStageNames)
 print(stageNames)
 
-def addRandomizedKettles(filePath, prefix, replacementStageNames):
-    with open(filePath, 'r') as file:
-        lines = file.readlines()
+def addRandomizedKettles(filePath, replacementStageNames):
+    yaml = YAML()
+    yaml.preserve_quotes = True
 
-    wordIndex = 0
-    with open(filePath, 'w') as file:
-        for line in lines:
-            if line.strip().startswith(prefix.strip()) and wordIndex < len(replacementStageNames):
-                newStageNameLine = f"{prefix} {replacementStageNames[wordIndex]}\n"
-                file.write(newStageNameLine)
-                wordIndex += 1
-            else:
-                file.write(line)
-                
+    with open(filePath, 'r') as f:
+        data = yaml.load(f)
+
+    replacementIter = iter(replacementStageNames)
+    for obj in data.get('Objs', []):
+        if 'DestMapFileName' in obj:
+            try:
+                obj['DestMapFileName'] = next(replacementIter)
+            except StopIteration:
+                break
+
+    with open(filePath, 'w') as f:
+        yaml.dump(data, f)
+
+def randomizeMusic():
+    yaml = YAML()
+    yaml.preserve_quotes = True
+
+    # List of possible music tracks
+    BGMTypeList =  ['TakoJoban', 'TakoBase', 'Race', 'BossLast', 'BeatLink', 'Missile', 'Rival']
+
+    with open('Static.pack_extracted/Mush/MapInfo.yaml', 'r') as f:
+        data = yaml.load(f)
+
+    if not isinstance(data, list):
+        print("Error: The YAML structure is not a list.")
+        return
+
+    for obj in data:
+        if 'BGMType' in obj:
+            obj['BGMType'] = random.choice(BGMTypeList)
+
+    with open('Static.pack_extracted/Mush/MapInfo.yaml', 'w') as f:
+        yaml.dump(data, f)
+
 def updateStageNumbers(): # Updates the MapInfo yaml with the correct stage numbers so collecting Zapfish will work correctly
     with open('Static.pack_extracted/Mush/MapInfo.yaml', 'r') as f:
         mapInfoYamlLines = f.readlines()
@@ -196,9 +221,10 @@ for item in bossStageNames:
 bossStageNames.append('Fld_BossRailKing_Bos_Msn') # Make sure the final boss stage isn't randomized
 print(bossStageNames)
 
-addRandomizedKettles(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml", '- DestMapFileName:', stageNames)
+addRandomizedKettles(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml", stageNames)
 updateStageNumbers()
 updateBossStageNumbers()
+randomizeMusic()
 convertToBYAML(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml")
 convertToBYAML('Static.pack_extracted/Mush/MapInfo.yaml')
 rebuildStaticPack()
