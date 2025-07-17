@@ -123,7 +123,7 @@ def randomizeMusic():
     yaml.preserve_quotes = True
 
     # List of possible music tracks
-    BGMTypeList =  ['TakoJoban', 'TakoBase', 'Race', 'BossLast', 'BeatLink', 'Missile', 'Rival']
+    BGMTypeList =  ['TakoJoban', 'TakoBase', 'Race', 'Missile', 'Rival']
 
     with open('Static.pack_extracted/Mush/MapInfo.yaml', 'r') as f:
         data = yaml.load(f)
@@ -135,6 +135,27 @@ def randomizeMusic():
     for obj in data:
         if 'BGMType' in obj:
             obj['BGMType'] = random.choice(BGMTypeList)
+
+    with open('Static.pack_extracted/Mush/MapInfo.yaml', 'w') as f:
+        yaml.dump(data, f)
+
+def randomizeInkColors():
+    yaml = YAML()
+    yaml.preserve_quotes = True
+
+    # List of possible ink colors
+    inkColors =  ['DarkBlue', 'Green', 'Lilac', 'LumiGreen', 'NightLumiGreen', 'MothGreen', 'Marigold', 'NightMarigold', 'Orange', 'Soda', 'Turquoise', 'Yellow']
+
+    with open('Static.pack_extracted/Mush/MapInfo.yaml', 'r') as f:
+        data = yaml.load(f)
+
+    if not isinstance(data, list):
+        print("Error: The YAML structure is not a list.")
+        return
+
+    for obj in data:
+        if 'TeamColor_Msn' in obj:
+            obj['TeamColor_Msn'] = random.choice(inkColors)
 
     with open('Static.pack_extracted/Mush/MapInfo.yaml', 'w') as f:
         yaml.dump(data, f)
@@ -225,6 +246,7 @@ addRandomizedKettles(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml", sta
 updateStageNumbers()
 updateBossStageNumbers()
 randomizeMusic()
+randomizeInkColors()
 convertToBYAML(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml")
 convertToBYAML('Static.pack_extracted/Mush/MapInfo.yaml')
 rebuildStaticPack()
