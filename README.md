@@ -1,6 +1,6 @@
-# Octo-Valley-Randomizer WIP
+# Octo-Valley-Randomizer
 A randomizer for Splatoon 1's Octo Valley singleplayer campaign.
 
-Extremely WIP; only supports randomizing levels as of right now.
+Extremely WIP; Currently supports randomizing kettles, ink colors, mission dialogue, and hero weapons with a basic GUI.
 
-Currently requires ruamel.yaml and oead, both of which can be installed from pip.
+Requires Python 3.12: Currently requires PyQt5, ruamel.yaml, PyLibMS and oead, all of which can be installed from pip.
