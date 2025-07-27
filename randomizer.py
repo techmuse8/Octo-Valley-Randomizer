@@ -2,6 +2,7 @@ import os
 import random
 from pathlib import Path
 import shutil
+import logging
 
 from oeadwrappers import *
 from ruamel.yaml import YAML
@@ -10,25 +11,11 @@ from LMS.Message.MSBTStream import write_msbt as writeMSBT
 from LMS.Message.MSBT import MSBT
 from LMS.Project.MSBP import MSBP
 
-#splatoonDumpPath = input("Enter the path to your Splatoon 1 Dump: ")
-splatoonRandoFiles = 'Splatoon_Rando_Files'
+
 
 packDirectoryPath = ''
 stageNames = []
 bossStageNames = []
-#shutil.copytree(f"{splatoonDumpPath}/Pack", f"{splatoonRandoFiles}/Pack")
-#shutil.copytree(f"{splatoonDumpPath}/Message", f"{splatoonRandoFiles}/Message")
-#shutil.copy(f"{splatoonDumpPath}/Pack/Static.pack", './Static.pack')
-
-#exit()
-
-
-#extractSARC('Static.pack')
-#World00ArchivePath = 'Static.pack_extracted/Map/Fld_World00_Wld.szs'
-
-
-#convertFromBYAML('Static.pack_extracted/Mush/MapInfo.byaml')
-
 startLine = 5
 
 def randomizeKettles():
@@ -46,15 +33,13 @@ def randomizeKettles():
     ogFullStageNames = stageNames
     stageNames = stageNames[:-5]
 
-    #print(bossStageNames)
-    #print(stageNames)
-
     random.shuffle(stageNames)
     random.shuffle(bossStageNames)
     
     for item in bossStageNames:
         stageNames.append(item)
     stageNames.append('Fld_BossRailKing_Bos_Msn') # Make sure the final boss stage isn't randomized
+    bossStageNames.append('Fld_BossRailKing_Bos_Msn')
 
     addRandomizedKettles(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml", stageNames)
     print(bossStageNames)
@@ -92,7 +77,6 @@ def randomizeMusic(mapInfoYAML):
         data = yaml.load(f)
 
     if not isinstance(data, list):
-        print("Error: The YAML structure is not a list.")
         return
 
     for obj in data:
@@ -102,7 +86,7 @@ def randomizeMusic(mapInfoYAML):
     with open(mapInfoYAML, 'w') as f:
         yaml.dump(data, f)
 
-def randomizeInkColors(mapInfoYAML):
+def randomizeInkColors(mapInfoYAML, inkColorSetting):
     yaml = YAML()
     yaml.preserve_quotes = True
 
@@ -119,9 +103,43 @@ def randomizeInkColors(mapInfoYAML):
     for obj in data:
         if 'TeamColor_Msn' in obj:
             obj['TeamColor_Msn'] = random.choice(inkColors)
-
+    if inkColorSetting == 1 or 2:
+        addVSInkColors(inkColorSetting)
     with open(mapInfoYAML, 'w') as f:
         yaml.dump(data, f)
+
+def addVSInkColors(setting):
+    parameterPath = staticPackDir + os.path.join("Parameter")
+    workFolder = (os.path.join(parameterPath, "work"))
+    os.makedirs(workFolder, exist_ok=True)
+    msnInkColors = []
+
+    if setting == 1:
+        for file in os.listdir(parameterPath):
+            if 'GfxSetting_Vss' in file:
+                shutil.copy(os.path.join(parameterPath, file), (os.path.join(parameterPath, "work")))
+            elif 'GfxSetting_Msn' in file:
+                msnInkColors.append(file)
+        
+        
+        delete4RandomInkColors(workFolder)
+        for i, file in enumerate(os.listdir(workFolder)):
+            shutil.move(os.path.join(workFolder, file), os.path.join(parameterPath, msnInkColors[i]))
+
+def delete4RandomInkColors(folderPath, count=4):
+    files = [f for f in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, f))]
+
+    if len(files) < count:
+        print(f"Only found {len(files)} file(s); deleting all of them.")
+        count = len(files)
+
+    filesToDelete = random.sample(files, count)
+
+    for file in filesToDelete:
+        fullPath = os.path.join(folderPath, file)
+        os.remove(fullPath)
+        print(f"Deleted: {file}")
+
 
 def updateStageNumbers(mapInfoYAMLPath, stageNames): # Updates the MapInfo yaml with the correct stage numbers so collecting Zapfish will work correctly
     print(mapInfoYAMLPath)
@@ -151,11 +169,10 @@ def updateStageNumbers(mapInfoYAMLPath, stageNames): # Updates the MapInfo yaml 
     with open(mapInfoYAMLPath, 'w') as f:
         f.writelines(updatedStageNo)
 
-def randomizeDialogue():
+def randomizeDialogue(splatoonRandoFiles):
     for file in os.listdir(f"{splatoonRandoFiles}/Message"):
         if file.startswith("CommonMsg"):
             extractSARC(f"{splatoonRandoFiles}/Message/{file}")
-            #print(f"{splatoonRandoFiles}/Message/" + file + '_extracted/Talk/TalkMission.msbt')
             dialogueRandomizer(f"{splatoonRandoFiles}/Message/" + file + '_extracted/Talk/TalkMission.msbt')
             packSARC(f"{splatoonRandoFiles}/Message/" + file + '_extracted', f"{splatoonRandoFiles}/Message/" + file, compress=True)
 
@@ -246,9 +263,27 @@ def updateStageIcons(originalStageOrder, shuffledStageOrder):
         print(filename)
         shutil.move(stageIconDir + '/remapped_images/' + filename, stageIconDir)
     
-    packSARC(packDirectoryPath + 'Layout.pack_extracted/Layout/MsnStageIcon_00.szs_extracted/MsnStageIcon_00.arc_extracted', stageIconLayoutArchive, compress=False)
-    packSARC(stageIconLayoutContainer + '_extracted', stageIconLayoutContainer, compress=True)
-    
+    packLayoutArchives('MsnStageIcon_00')
+
+def extractLayoutArchives(layoutFilename):
+    """A function to make unpacking layout archives less tedious."""
+    layoutContainer = (os.path.join(layoutFolder, layoutFilename + '.szs'))
+    layoutArchive = layoutContainer + f'_extracted/{layoutFilename}.arc'
+
+    extractSARC(layoutContainer)
+    extractSARC(layoutArchive)
+
+def packLayoutArchives(layoutFilename):
+    """A function to make packing layout archives less tedious."""
+    layoutContainer = (os.path.join(layoutFolder, layoutFilename + '.szs'))
+    layoutArchive = layoutContainer + f'_extracted/{layoutFilename}.arc'
+
+    packSARC(layoutArchive + '_extracted', layoutArchive, compress=False)
+    shutil.rmtree(layoutArchive + '_extracted')
+    packSARC(layoutContainer + '_extracted', layoutContainer, compress=True)
+    shutil.rmtree(layoutContainer + '_extracted')
+
+
 def rebuildStaticPack(extractedStaticPackDir):
     print('inRBSP')
     for dirpath, dirnames, filenames in os.walk(extractedStaticPackDir):
@@ -256,32 +291,74 @@ def rebuildStaticPack(extractedStaticPackDir):
             if filename.endswith('.yaml'):
                 filePath = os.path.join(dirpath, filename)
                 try:
-                    #os.remove(filePath)
+                    os.remove(filePath)
                     print(f"Deleted: {filePath}")
                 except OSError as e:
                     print(f"Error deleting {filePath}: {e}")
-    
-    packSARC(f"{World00ArchivePath}_extracted", World00ArchivePath, compress=True)
+    if isKettles:
+        packSARC(f"{World00ArchivePath}_extracted", World00ArchivePath, compress=True)
     #os.remove(f"{World00ArchivePath}_extracted") # Cleanup
-    packSARC(extractedStaticPackDir, 'randomized_Static.pack', compress=False)
-print(stageNames)
+    packSARC(extractedStaticPackDir, packDirectoryPath + 'Static.pack', compress=False)
 
-def setupRandomization(splatoonFilesystemRoot, randomizerSeed):
+def addLayoutEdits():
+    """Adds in the randomizer logo and the custom tutorial images."""
+    extractLayoutArchives('Tut_TutorialPicture_00')
+    extractLayoutArchives('Plz_Title_00')
+
+    extTutorialLayoutArchiveDir = layoutFolder + 'Tut_TutorialPicture_00.szs_extracted/Tut_TutorialPicture_00.arc_extracted/'
+    extTitleLayoutArchiveDir = layoutFolder + 'Plz_Title_00.szs_extracted/Plz_Title_00.arc_extracted/'
+
+    shutil.copy('assets/Rando Title Screen UI and Logo/GambitLogo_00^l.bflim', extTitleLayoutArchiveDir + 'timg/GambitLogo_00^l.bflim')
+    shutil.copy('assets/Rando Title Screen UI and Logo/Plz_Title_00.bflyt', extTitleLayoutArchiveDir + 'blyt/Plz_Title_00.bflyt')
+    shutil.copy('assets/Tutorial Images/TutorialPic_00^o.bflim', extTutorialLayoutArchiveDir + 'timg/TutorialPic_00^o.bflim')
+    shutil.copy('assets/Tutorial Images/TutorialPic_01^o.bflim', extTutorialLayoutArchiveDir + 'timg/TutorialPic_01^o.bflim')
+
+    packLayoutArchives('Tut_TutorialPicture_00')
+    packLayoutArchives('Plz_Title_00')
+    packSARC(packDirectoryPath + 'Layout.pack_extracted', packDirectoryPath + 'Layout.pack', compress=False)
+
+def performFinishingTouches():
+    if os.path.isdir(packDirectoryPath + 'Layout.pack_extracted'):
+        addLayoutEdits()
+
+    
+    
+def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     random.seed(randomizerSeed)
-    global World00ArchivePath, packDirectoryPath, mapInfoYAML, updatedStageNo, stageNames
+    global World00ArchivePath, packDirectoryPath, mapInfoYAML, updatedStageNo, stageNames, staticPackDir, isKettles, layoutFolder
     updatedStageNo = []
-    extractSARC(splatoonFilesystemRoot + '/Pack/' + 'Static.pack')
-    World00ArchivePath = splatoonFilesystemRoot + '/Pack/' + 'Static.pack_extracted/Map/Fld_World00_Wld.szs'
     packDirectoryPath = splatoonFilesystemRoot + '/Pack/'
-    extractSARC(World00ArchivePath)
-    convertFromBYAML(packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.byaml')
-    convertFromBYAML(World00ArchivePath + '_extracted/Fld_World00_Wld.byaml')
-    mapInfoYAML = packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.yaml'
-    randomizeKettles()
-    randomizeMusic(mapInfoYAML)
-    randomizeInkColors(mapInfoYAML)
-    randomizeDialogue()
-    convertToBYAML(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml")
+    staticPackDir = packDirectoryPath + 'Static.pack_extracted/'
+    layoutFolder = packDirectoryPath + 'Layout.pack_extracted/Layout/'
+    isKettles = False
+
+    if options["kettles"] or options["inkColors"] or options["music"]:
+        extractSARC(splatoonFilesystemRoot + '/Pack/' + 'Static.pack')
+        convertFromBYAML(packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.byaml')
+        mapInfoYAML = packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.yaml'
+        
+    if options["kettles"]:
+        print("Randomizing Kettles")
+        isKettles = True
+        World00ArchivePath = splatoonFilesystemRoot + '/Pack/' + 'Static.pack_extracted/Map/Fld_World00_Wld.szs'
+        extractSARC(World00ArchivePath)
+        convertFromBYAML(World00ArchivePath + '_extracted/Fld_World00_Wld.byaml')
+        randomizeKettles()
+        convertToBYAML(f"{World00ArchivePath}_extracted/Fld_World00_Wld.yaml")
+
+    if options["music"]:
+        print("Randomizing Music")
+        randomizeMusic(mapInfoYAML)
+
+    if options["inkColors"]:   
+        print("Randomizing ink colors")
+        randomizeInkColors(mapInfoYAML, options["inkColorSet"])
+
+    if options["missionDialogue"]:
+        print("Randomizing Dialogue")
+        randomizeDialogue(splatoonFilesystemRoot)
+    
     convertToBYAML(mapInfoYAML)
     rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
+    performFinishingTouches()
 
