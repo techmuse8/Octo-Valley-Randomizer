@@ -169,6 +169,18 @@ class MainWindow(QMainWindow):
         else:
              self.showErrorDialog('Error!', 'Ensure that you have selected a Splatoon 1 dump!')
 
+    def copyOutputRandomizer(self, outputRandoDir):
+        os.makedirs(outputRandoDir, exist_ok=True)
+        os.makedirs(f'{outputRandoDir}/Pack', exist_ok=True)
+        os.makedirs(f'{outputRandoDir}/Message', exist_ok=True)
+
+        shutil.copy('Splatoon_Rando_Files_work/Pack/Layout.pack', f'{outputRandoDir}/Pack/Layout.pack')
+        shutil.copy('Splatoon_Rando_Files_work/Pack/Static.pack', f'{outputRandoDir}/Pack/Static.pack')
+        for entry in os.listdir('Splatoon_Rando_Files_work/Message/'):
+            fullEntryPath = os.path.join('Splatoon_Rando_Files_work/Message/', entry)
+            if os.path.isfile(fullEntryPath) and 'Msg' in entry:
+                shutil.copy(f'Splatoon_Rando_Files_work/Message/{entry}', f'{outputRandoDir}/Message/')
+
     def startRandomization(self, splatoon1DirectoryPath):
         try:
             shutil.copytree(f"{splatoon1DirectoryPath}/Pack", "Splatoon_Rando_Files_work/Pack")
@@ -194,21 +206,28 @@ class MainWindow(QMainWindow):
             "inkColorSet": self.inkColorSetDropdown.currentIndex(),
             "music": self.musicCheckBox.isChecked(),
             "missionDialogue": self.missionDialogueCheckBox.isChecked(),
+            "platform": self.platformDropdown.currentIndex(),
         }
         setupRandomization("Splatoon_Rando_Files_work", self.randomizerSeedBox.text(), options)
 
         if self.platformDropdown.currentIndex() == 0: # For Wii U
-            outputRandoDir = f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}/content'
-            os.makedirs(outputRandoDir, exist_ok=True)
-            os.makedirs(f'{outputRandoDir}/Pack', exist_ok=True)
-            os.makedirs(f'{outputRandoDir}/Message', exist_ok=True)
+            outputRandoDir = 'output/Wii U/' + f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}/content'
+            self.copyOutputRandomizer(outputRandoDir)
 
-            shutil.copy('Splatoon_Rando_Files_work/Pack/Layout.pack', f'{outputRandoDir}/Pack/Layout.pack')
-            shutil.copy('Splatoon_Rando_Files_work/Pack/Static.pack', f'{outputRandoDir}/Pack/Static.pack')
-            for entry in os.listdir('Splatoon_Rando_Files_work/Message/'):
-                fullEntryPath = os.path.join('Splatoon_Rando_Files_work/Message/', entry)
-                if os.path.isfile(fullEntryPath) and 'Msg' in entry:
-                    shutil.copy(f'Splatoon_Rando_Files_work/Message/{entry}', f'{outputRandoDir}/Message/')
+        if self.platformDropdown.currentIndex() == 1: # For Cemu
+            outputRandoDir = 'output/Cemu/' + f'Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}'
+            self.copyOutputRandomizer(outputRandoDir + '/content')
+            with open ('assets/rules.txt', 'r') as file:
+                cemuRulesTxt = file.read()
+            modifiedCemuRulesTxt = cemuRulesTxt.replace("{seed}", self.randomizerSeedBox.text())
+
+            with open (outputRandoDir + '/rules.txt', "x") as file:
+                file.write(modifiedCemuRulesTxt)
+            
+            if options["heroWeapons"]:
+                shutil.move("patches/cemu_OV_weapon.txt", outputRandoDir + '/patches.txt')
+
+        shutil.rmtree("Splatoon_Rando_Files_work") # Cleanup
 
 app = QApplication(sys.argv)
 window = MainWindow()

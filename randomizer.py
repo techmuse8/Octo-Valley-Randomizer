@@ -222,6 +222,14 @@ def updateBossStageNumbers(mapInfoYAML, bossStageNames): # Updates the MapInfo y
     with open(mapInfoYAML, 'w') as f:
         f.writelines(updatedBossStageNo)
         
+def randomizeHeroWeapon():
+    randomWeapon = random.randint(0, 2)
+    if randomWeapon == 0:
+        return
+    elif randomWeapon == 1: # Hero Roller
+        shutil.copy('patches/cemu/heroRoller.txt', 'patches/cemu_OV_weapon.txt')
+    elif randomWeapon == 2: # Hero Charger
+        shutil.copy('patches/cemu/heroCharger.txt', 'patches/cemu_OV_weapon.txt')
 
 def updateStageIcons(originalStageOrder, shuffledStageOrder):
     """
@@ -357,6 +365,10 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     if options["missionDialogue"]:
         print("Randomizing Dialogue")
         randomizeDialogue(splatoonFilesystemRoot)
+    
+    if options["heroWeapons"]:
+        print("Randomizing Hero Weapon")
+        randomizeHeroWeapon()
     
     convertToBYAML(mapInfoYAML)
     rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
