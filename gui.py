@@ -25,7 +25,7 @@ globalGameDirectoryPath = ''
 
 logging.basicConfig(
     filename='randomizer_log.txt',
-    level=logging.ERROR,   # Use INFO or ERROR for less verbosity
+    level=logging.ERROR,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
