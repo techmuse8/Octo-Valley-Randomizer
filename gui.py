@@ -6,25 +6,30 @@ import shutil
 import os
 import hashlib
 import logging
+
 from PyQt5 import uic
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
-    QComboBox,
-    QDoubleSpinBox,
-    QLabel,
-    QLineEdit,
-    QListWidget,
     QMainWindow,
     QWidget,
     QFileDialog,
     QMessageBox,
 )
+
 from randomizer import *
 from hashcollection import *
 
 globalGameDirectoryPath = '' 
+
+logging.basicConfig(
+    filename='randomizer_log.txt',
+    level=logging.ERROR,   # Use INFO or ERROR for less verbosity
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+logging.info("Application started.")
 
 QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
@@ -39,7 +44,7 @@ class MainWindow(QMainWindow):
         self.splatoon1Path.setPlaceholderText("Selected directory path will appear here.")
         self.setWindowTitle("Splatoon 1 Octo Valley Randomizer")
         self.setGeometry(100, 100, 706, 496)
-        self.setMinimumSize(QSize(706, 496))
+        self.setFixedSize(QSize(706, 496))
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint | Qt.CustomizeWindowHint)
         self.browseButton.clicked.connect(self.openDirectoryDialog)
         self.generateSeedButton.clicked.connect(self.generateSeed)
@@ -208,10 +213,11 @@ class MainWindow(QMainWindow):
             "missionDialogue": self.missionDialogueCheckBox.isChecked(),
             "platform": self.platformDropdown.currentIndex(),
         }
+        print(self.platformDropdown.currentIndex())
         setupRandomization("Splatoon_Rando_Files_work", self.randomizerSeedBox.text(), options)
 
         if self.platformDropdown.currentIndex() == 0: # For Wii U
-            outputRandoDir = 'output/Wii U/' + f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}/content'
+            outputRandoDir = os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}/content')
             self.copyOutputRandomizer(outputRandoDir)
 
         if self.platformDropdown.currentIndex() == 1: # For Cemu
@@ -224,10 +230,34 @@ class MainWindow(QMainWindow):
             with open (outputRandoDir + '/rules.txt', "x") as file:
                 file.write(modifiedCemuRulesTxt)
             
-            if options["heroWeapons"]:
-                shutil.move("patches/cemu_OV_weapon.txt", outputRandoDir + '/patches.txt')
+        if options["heroWeapons"]:
+            if options["platform"] == 1:
+                if os.path.exists('patches/cemu_OV_weapon.txt'):
+                    print("Copying weapon patches for Cemu")
+                    shutil.move("patches/cemu_OV_weapon.txt", outputRandoDir + '/patches.txt')
+            elif options["platform"] == 0:
+                print('Copying weapon patches for Wii U')
+                if os.path.exists('patches/consoleWeaponPatches.hax'):    
+                    os.makedirs(os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}'))
+                    shutil.move("patches/consoleWeaponPatches.hax", 'output/Wii U/' + f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}/OctoValleyWeaponPatches.hax')
 
         shutil.rmtree("Splatoon_Rando_Files_work") # Cleanup
+
+def exceptionHook(exctype, value, traceback):
+        logging.exception("Unhandled exception:", exc_info=(exctype, value, traceback))
+
+        # Show error dialog 
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setWindowTitle("Unexpected Error")
+        msg.setText("An exception occured! Please check the log file for details.")
+        msg.setDetailedText(f"{exctype.__name__}: {value}")
+        msg.exec()
+
+        # Call the default hook after showing the error
+        sys.__excepthook__(exctype, value, traceback)
+
+sys.excepthook = exceptionHook
 
 app = QApplication(sys.argv)
 window = MainWindow()

@@ -6,9 +6,13 @@ expected_hashes_2_12_1 = {
     "CommonMsg_EUfr.szs": "e2aec28d9cf4f9c706d7bcc9211d1c3a",
     "CommonMsg_EUit.szs": "2e37b694e03a831ccad8338ded51e2ec",
     "CommonMsg_JPja.szs": "a7219c96141b2070217778f0e2a23d1f",
+    "LayoutMsg_JPja.szs": "eb1ec980aee96fe0028619f1a0bfc6a5",
     "CommonMsg_USen.szs": "fc18066629e980f20ce36160d65adf73",
     "CommonMsg_USes.szs": "be6cf01f7ce6d93637b03a5698bf2eb0",
-    "CommonMsg.USfr.szs": "6048704852b1d6e2b43b92cec03491a3",
+    "CommonMsg_USfr.szs": "6048704852b1d6e2b43b92cec03491a3",
+    "LayoutMsg_USen.szs": "517d6c350cda0bec447918ba11a745c9",
+    "LayoutMsg_USes.szs": "518e95a5b266df74f3c8eeb493c4de6d",
+    "LayoutMsg_USfr.szs": "edcdcd04f2584630ca67f2c2204b0b07",
     "Layout.pack": "714f52aedfac3aeead8e2a3075ff3620",
     "Static.pack": "8af3f497f36276195b4d90b98df2b99c"
 }

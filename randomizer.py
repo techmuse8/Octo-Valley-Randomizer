@@ -222,14 +222,23 @@ def updateBossStageNumbers(mapInfoYAML, bossStageNames): # Updates the MapInfo y
     with open(mapInfoYAML, 'w') as f:
         f.writelines(updatedBossStageNo)
         
-def randomizeHeroWeapon():
+def randomizeHeroWeapon(platform):
     randomWeapon = random.randint(0, 2)
     if randomWeapon == 0:
         return
     elif randomWeapon == 1: # Hero Roller
-        shutil.copy('patches/cemu/heroRoller.txt', 'patches/cemu_OV_weapon.txt')
+        if platform == 0: # Patches for Wii U
+            shutil.copy('patches/wiiu/HeroRollerInOctoValley.hax', 'patches/consoleWeaponPatches.hax')
+
+        elif platform == 1: # Patches for Cemu
+            shutil.copy('patches/cemu/heroRoller.txt', 'patches/cemu_OV_weapon.txt')
+
     elif randomWeapon == 2: # Hero Charger
-        shutil.copy('patches/cemu/heroCharger.txt', 'patches/cemu_OV_weapon.txt')
+        if platform == 0:
+            shutil.copy('patches/wiiu/HeroChargerInOctoValley.hax', 'patches/consoleWeaponPatches.hax')
+        
+        elif platform == 1:
+            shutil.copy('patches/cemu/heroCharger.txt', 'patches/cemu_OV_weapon.txt')
 
 def updateStageIcons(originalStageOrder, shuffledStageOrder):
     """
@@ -340,7 +349,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     layoutFolder = packDirectoryPath + 'Layout.pack_extracted/Layout/'
     isKettles = False
 
-    if options["kettles"] or options["inkColors"] or options["music"]:
+    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
         extractSARC(splatoonFilesystemRoot + '/Pack/' + 'Static.pack')
         convertFromBYAML(packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.byaml')
         mapInfoYAML = packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.yaml'
@@ -368,7 +377,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     
     if options["heroWeapons"]:
         print("Randomizing Hero Weapon")
-        randomizeHeroWeapon()
+        randomizeHeroWeapon(options["platform"])
     
     convertToBYAML(mapInfoYAML)
     rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
