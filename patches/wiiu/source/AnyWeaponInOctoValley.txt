@@ -1,0 +1,5 @@
+0x038A9B2C = li r5, 0x44c
+; 0x44c can be replaced with any weapon ID in hex, 0x44c is the Hero Roller, 0x4b0 is the Hero Charger
+; WARNING: Using any non Hero Weapon in Octo Valley will crash the game upon firing the weapon.
+0x0392D750 = li r3, 0x1
+; Thanks to Pirlo for contributing the 1 line above, allowing for the roller to work in Octo Valley
