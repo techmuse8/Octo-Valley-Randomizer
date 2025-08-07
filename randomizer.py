@@ -302,7 +302,6 @@ def packLayoutArchives(layoutFilename):
 
 
 def rebuildStaticPack(extractedStaticPackDir):
-    print('inRBSP')
     for dirpath, dirnames, filenames in os.walk(extractedStaticPackDir):
         for filename in filenames:
             if filename.endswith('.yaml'):
@@ -317,7 +316,15 @@ def rebuildStaticPack(extractedStaticPackDir):
     #os.remove(f"{World00ArchivePath}_extracted") # Cleanup
     packSARC(extractedStaticPackDir, packDirectoryPath + 'Static.pack', compress=False)
 
-def addLayoutEdits():
+def addEditedWeaponUpgradeUI():
+    """Adds in the edited weapon upgrade UI with a footnote nothing that only the Hero Shot can be upgraded."""
+    extractLayoutArchives('Wdm_Reinforce_00')
+    extWeaponUpgradeLayoutDir = layoutFolder + 'Wdm_Reinforce_00.szs_extracted/Wdm_Reinforce_00.arc_extracted/'
+
+    shutil.copy('assets/Weapon Upgrade UI/Wdm_Reinforce_00.bflyt', extWeaponUpgradeLayoutDir + 'blyt/Wdm_Reinforce_00.bflyt')
+    packLayoutArchives('Wdm_Reinforce_00')
+
+def addLayoutEdits(options):
     """Adds in the randomizer logo and the custom tutorial images."""
     extractLayoutArchives('Tut_TutorialPicture_00')
     extractLayoutArchives('Plz_Title_00')
@@ -332,17 +339,19 @@ def addLayoutEdits():
 
     packLayoutArchives('Tut_TutorialPicture_00')
     packLayoutArchives('Plz_Title_00')
+
+    if options["heroWeapons"]:
+        addEditedWeaponUpgradeUI()
+
     packSARC(packDirectoryPath + 'Layout.pack_extracted', packDirectoryPath + 'Layout.pack', compress=False)
 
-def performFinishingTouches():
+def performFinishingTouches(options):
     if os.path.isdir(packDirectoryPath + 'Layout.pack_extracted'):
-        addLayoutEdits()
-
-    
+        addLayoutEdits(options)
     
 def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     random.seed(randomizerSeed)
-    global World00ArchivePath, packDirectoryPath, mapInfoYAML, updatedStageNo, stageNames, staticPackDir, isKettles, layoutFolder
+    global World00ArchivePath, packDirectoryPath, mapInfoYAML, updatedStageNo, stageNames, staticPackDir, isKettles, isHeroWeapon, layoutFolder
     updatedStageNo = []
     packDirectoryPath = splatoonFilesystemRoot + '/Pack/'
     staticPackDir = packDirectoryPath + 'Static.pack_extracted/'
@@ -371,7 +380,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         print("Randomizing ink colors")
         randomizeInkColors(mapInfoYAML, options["inkColorSet"])
 
-    if options["missionDialogue"]:
+    if options["missionDialogue"]:     
         print("Randomizing Dialogue")
         randomizeDialogue(splatoonFilesystemRoot)
     
@@ -381,5 +390,5 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     
     convertToBYAML(mapInfoYAML)
     rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
-    performFinishingTouches()
+    performFinishingTouches(options)
 

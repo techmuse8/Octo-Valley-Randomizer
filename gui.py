@@ -250,7 +250,7 @@ def exceptionHook(exctype, value, traceback):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setWindowTitle("Unexpected Error")
-        msg.setText("An exception occured! Please check the log file for details.")
+        msg.setText("An exception has occured! Please check the log file for details.")
         msg.setDetailedText(f"{exctype.__name__}: {value}")
         msg.exec()
 
