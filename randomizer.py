@@ -348,6 +348,9 @@ def addLayoutEdits(options):
 def performFinishingTouches(options):
     if os.path.isdir(packDirectoryPath + 'Layout.pack_extracted'):
         addLayoutEdits(options)
+    else:
+        extractSARC(packDirectoryPath + 'Layout.pack')
+        addLayoutEdits(options)
     
 def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     random.seed(randomizerSeed)
@@ -388,7 +391,8 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         print("Randomizing Hero Weapon")
         randomizeHeroWeapon(options["platform"])
     
-    convertToBYAML(mapInfoYAML)
+    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
+        convertToBYAML(mapInfoYAML)
     rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
     performFinishingTouches(options)
 

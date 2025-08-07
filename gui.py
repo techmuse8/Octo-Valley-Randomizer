@@ -84,6 +84,7 @@ class MainWindow(QMainWindow):
             print(self.gameVersion)
             globalGameDirectoryPath = directoryPath
             self.splatoon1Path.setText(directoryPath)
+            self.updateRandomizeButtonState()
             print(self.titleID)
 
     def generateSeed(self):
@@ -187,6 +188,9 @@ class MainWindow(QMainWindow):
                 shutil.copy(f'Splatoon_Rando_Files_work/Message/{entry}', f'{outputRandoDir}/Message/')
 
     def startRandomization(self, splatoon1DirectoryPath):
+        self.progressTextbox.setText("Randomizing: Please wait...")
+        self.progressTextbox.setStyleSheet("color: black;")
+        QApplication.processEvents()
         try:
             shutil.copytree(f"{splatoon1DirectoryPath}/Pack", "Splatoon_Rando_Files_work/Pack")
             shutil.copytree(f"{splatoon1DirectoryPath}/Message", "Splatoon_Rando_Files_work/Message")
@@ -213,7 +217,7 @@ class MainWindow(QMainWindow):
             "missionDialogue": self.missionDialogueCheckBox.isChecked(),
             "platform": self.platformDropdown.currentIndex(),
         }
-        print(self.platformDropdown.currentIndex())
+
         setupRandomization("Splatoon_Rando_Files_work", self.randomizerSeedBox.text(), options)
 
         if self.platformDropdown.currentIndex() == 0: # For Wii U
@@ -221,7 +225,7 @@ class MainWindow(QMainWindow):
             self.copyOutputRandomizer(outputRandoDir)
 
         if self.platformDropdown.currentIndex() == 1: # For Cemu
-            outputRandoDir = 'output/Cemu/' + f'Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}'
+            outputRandoDir = 'output/Cemu/' + f'{self.randomizerSeedBox.text()}/' + f'Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}'
             self.copyOutputRandomizer(outputRandoDir + '/content')
             with open ('assets/rules.txt', 'r') as file:
                 cemuRulesTxt = file.read()
@@ -241,6 +245,8 @@ class MainWindow(QMainWindow):
                     os.makedirs(os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}'))
                     shutil.move("patches/consoleWeaponPatches.hax", 'output/Wii U/' + f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}/OctoValleyWeaponPatches.hax')
 
+        self.progressTextbox.setText("Randomization completed!")
+        self.progressTextbox.setStyleSheet("color: green;")
         shutil.rmtree("Splatoon_Rando_Files_work") # Cleanup
 
 def exceptionHook(exctype, value, traceback):
@@ -250,6 +256,9 @@ def exceptionHook(exctype, value, traceback):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setWindowTitle("Unexpected Error")
+        sys.mainWindow.progressTextbox.setText("An error has occured!")
+        sys.mainWindow.progressTextbox.setStyleSheet("color: red")
+        QApplication.processEvents()
         msg.setText("An exception has occured! Please check the log file for details.")
         msg.setDetailedText(f"{exctype.__name__}: {value}")
         msg.exec()
@@ -261,5 +270,6 @@ sys.excepthook = exceptionHook
 
 app = QApplication(sys.argv)
 window = MainWindow()
+sys.mainWindow = window
 window.show()
 app.exec()

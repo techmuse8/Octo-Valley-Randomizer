@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>807</width>
-    <height>619</height>
+    <width>790</width>
+    <height>570</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -224,6 +224,28 @@
       </property>
      </widget>
     </item>
+    <item alignment="Qt::AlignHCenter">
+     <widget class="QLineEdit" name="progressTextbox">
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>400</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -231,7 +253,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>807</width>
+     <width>790</width>
      <height>22</height>
     </rect>
    </property>
