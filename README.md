@@ -13,4 +13,10 @@ As of writing, these are the aspects that are able to be randomized/shuffilized
 
 ## Operating the randomizer
 
-Requires Python 3.12 with the following libraries installed from pip: PyQt5, ruamel.yaml, PyLibMS and oead
+Requires Python 3.12 with the following dependencies installed from pip: PyQt5, ruamel.yaml, PylibMS and oead
+
+
+## Credits
+
+[Pirlo](https://twitter.com/0x1CAA9C5C) - Making a patch that lets the Hero Roller work properply in singleplayer
+[Archipelago Discord Server](https://discord.gg/8Z65BR2) - Feedback, feature suggestions
