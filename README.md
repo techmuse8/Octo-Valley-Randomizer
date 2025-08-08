@@ -4,7 +4,7 @@
 A randomizer for Splatoon 1's Octo Valley singleplayer campaign with a basic GUI.
 
 ## Features
-As of writing, these are the aspects that are able to be randomized/shuffilized
+As of writing, these are the aspects that are able to be randomized/shuffled:
 - Kettles
 - Ink colors (with the option to choose the color sets from either Octo Valley or multiplayer battles)
 - Mission dialogue
@@ -13,11 +13,14 @@ As of writing, these are the aspects that are able to be randomized/shuffilized
 
 ## Operating the randomizer
 
-Requires Python 3.12 with the following dependencies installed from pip: PyQt5, ruamel.yaml, PylibMS and oead
+Requires at least [Python 3.12](https://www.python.org/downloads/release/python-3127/) with the following dependencies installed from pip: 
 
+- PyQt5 
+- ruamel.yaml
+- PylibMS 
+- oead
 
 ## Credits
 
-[Pirlo](https://twitter.com/0x1CAA9C5C) - Making a patch that lets the Hero Roller work properply in singleplayer
-
-[Archipelago Discord Server](https://discord.gg/8Z65BR2) - Feedback, feature suggestions
+- [Pirlo](https://twitter.com/0x1CAA9C5C) - Making a patch that lets the Hero Roller work properply in singleplayer
+- [Archipelago Discord Server](https://discord.gg/8Z65BR2) - Feedback, feature suggestions
