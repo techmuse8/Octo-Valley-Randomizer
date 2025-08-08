@@ -8,6 +8,7 @@ import hashlib
 import logging
 
 from PyQt5 import uic
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import (
     QApplication,
@@ -43,6 +44,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(centralWidget)
         self.splatoon1Path.setPlaceholderText("Selected directory path will appear here.")
         self.setWindowTitle("Splatoon 1 Octo Valley Randomizer")
+        self.setWindowIcon(QIcon('assets/misc/icon.png'))
         self.setGeometry(100, 100, 706, 496)
         self.setFixedSize(QSize(706, 496))
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint | Qt.CustomizeWindowHint)
@@ -140,7 +142,6 @@ class MainWindow(QMainWindow):
                   print(f"Valid {filename}")
             else:
                 print(f"Missing {filename}")
-                #allValid = False
 
         return allValid
             
@@ -251,8 +252,7 @@ class MainWindow(QMainWindow):
 
 def exceptionHook(exctype, value, traceback):
         logging.exception("Unhandled exception:", exc_info=(exctype, value, traceback))
-
-        # Show error dialog 
+ 
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setWindowTitle("Unexpected Error")
@@ -263,7 +263,6 @@ def exceptionHook(exctype, value, traceback):
         msg.setDetailedText(f"{exctype.__name__}: {value}")
         msg.exec()
 
-        # Call the default hook after showing the error
         sys.__excepthook__(exctype, value, traceback)
 
 sys.excepthook = exceptionHook

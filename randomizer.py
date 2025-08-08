@@ -6,10 +6,10 @@ import logging
 
 from oeadwrappers import *
 from ruamel.yaml import YAML
-from LMS.Message.MSBTStream import read_msbt as readMSBT
-from LMS.Message.MSBTStream import write_msbt as writeMSBT
-from LMS.Message.MSBT import MSBT
-from LMS.Project.MSBP import MSBP
+from lms.message.msbtio import read_msbt as readMSBT
+from lms.message.msbtio import write_msbt as writeMSBT
+from lms.message.msbt import MSBT
+from lms.project.msbp import MSBP
 
 
 
@@ -178,7 +178,9 @@ def randomizeDialogue(splatoonRandoFiles):
 
 def dialogueRandomizer(msbtPath):
     with open (msbtPath, "rb+") as file:
-        msbt = readMSBT(file)
+        data = file.read()
+        msbt = readMSBT(data)
+
     entryNames = []
 
     entry = msbt.entries[4]
@@ -393,6 +395,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     
     if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
         convertToBYAML(mapInfoYAML)
-    rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
+        rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
+    
     performFinishingTouches(options)
 
