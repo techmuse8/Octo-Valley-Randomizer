@@ -19,4 +19,5 @@ Requires Python 3.12 with the following dependencies installed from pip: PyQt5, 
 ## Credits
 
 [Pirlo](https://twitter.com/0x1CAA9C5C) - Making a patch that lets the Hero Roller work properply in singleplayer
+
 [Archipelago Discord Server](https://discord.gg/8Z65BR2) - Feedback, feature suggestions
