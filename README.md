@@ -1,4 +1,4 @@
-# Octo-Valley-Randomizer
+# Octo Valley Randomizer
 <img src="assets/repo_assets/Octo Valley Randomizer logo.png?raw=true" width="70%">
 
 A randomizer for Splatoon 1's Octo Valley singleplayer campaign with a basic GUI.
