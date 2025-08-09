@@ -2,7 +2,7 @@
 <img src="assets/repo_assets/Octo Valley Randomizer logo.png?raw=true" width="70%">
 
 A randomizer for Splatoon 1's Octo Valley singleplayer campaign with a basic GUI.
-<img src="wiki_assets/img/using_rando_screenshot1.png?raw=true?raw=true" width="70%">
+<img src="wiki_assets/img/using_rando_screenshot1.png?raw=true?raw=true" width="85%">
 
 ## Features
 As of writing, these are the aspects that are able to be randomized/shuffled:
