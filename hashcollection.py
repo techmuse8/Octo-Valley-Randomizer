@@ -1,10 +1,15 @@
 expected_hashes_2_12_1 = {
-    # MD5 hashes for version 2.12.1 files
+    # MD5 hashes for version 2.12.1 files needed by the randomizer
     "CommonMsg_EUde.szs": "12a0dc63f7a4cdf6555b16725d1d66a2",
     "CommonMsg_EUen.szs": "f367ef0077ad1a3f7b3a4837a43ee0e6",
     "CommonMsg_EUes.szs": "a770fc94172afe1ae060ac13e93b4fc4",
     "CommonMsg_EUfr.szs": "e2aec28d9cf4f9c706d7bcc9211d1c3a",
     "CommonMsg_EUit.szs": "2e37b694e03a831ccad8338ded51e2ec",
+    "LayoutMsg_EUde.szs": "702a7f6725044a7b3d5d8a29018798fd",
+    "LayoutMsg_EUen.szs": "275082cc66f7b592be764324466afe87",
+    "LayoutMsg_EUes.szs": "778e6b78d0cf18aa546f9141b21529db",
+    "LayoutMsg_EUfr.szs": "caadee850a032835eb883f56ba410727",
+    "LayoutMsg_EUit.szs": "68dfba0aa68f77be0d2d5d3f4c22c82e",
     "CommonMsg_JPja.szs": "a7219c96141b2070217778f0e2a23d1f",
     "LayoutMsg_JPja.szs": "eb1ec980aee96fe0028619f1a0bfc6a5",
     "CommonMsg_USen.szs": "fc18066629e980f20ce36160d65adf73",
