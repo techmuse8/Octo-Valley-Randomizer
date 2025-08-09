@@ -290,7 +290,6 @@ def init():
     app.exec()
 
 def main():
-    print("in main")
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     logFilename = f"logs/randomizer_log_{timestamp}.txt"
 
@@ -310,7 +309,6 @@ def main():
 
     if isAllDepsInstalled == False:
         packageString = ', '.join(dependencycheck.missingDependencies)
-        print(packageString)
         response = input(f"The following dependencies are required to use this program but aren't installed: {packageString}.\nWould you like to install them now? [y/n]\n").strip().lower()
         if response == 'y': 
             subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--break-system-packages"], stdout=sys.stdout, stderr=sys.stderr) # I know there's --break-system-packages but idc
