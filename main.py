@@ -320,8 +320,8 @@ def main():
     logging.info("Application started.")
 
     # Here we check if the user has all of the dependencies installed or not
-    for package in dependencycheck.dependencies:
-        isAllDepsInstalled = dependencycheck.checkIsMissing(package)
+    for package, license in dependencycheck.dependencies.items():
+        isAllDepsInstalled = dependencycheck.checkIsMissing(package, license)
 
     if isAllDepsInstalled == False:
         packageString = ', '.join(dependencycheck.missingDependencies)
