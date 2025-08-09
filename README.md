@@ -14,7 +14,10 @@ As of writing, these are the aspects that are able to be randomized/shuffled:
 
 ## Prerequisites 
 
-Requires at least [Python 3.12](https://www.python.org/downloads/release/python-3127/) with the following dependencies installed from pip: 
+Requires [Python 3.12](https://www.python.org/downloads/release/python-3127/) with the following dependencies installed from pip: 
+
+> [!IMPORTANT]  
+> Due to issues with oead not installing on Python 3.12 and the library PyLibMS only working on Python versions 3.12+, the randomizer currently ONLY works with Python 3.12!
 
 - [PyQt5](https://pypi.org/project/PyQt5/)
 - [ruamel.yaml](https://pypi.org/project/ruamel.yaml/)
