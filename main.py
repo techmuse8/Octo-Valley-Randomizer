@@ -9,7 +9,6 @@ import logging
 import datetime
 import importlib.util
 import subprocess
-import requests
 
 import dependencycheck
 
@@ -29,6 +28,7 @@ def init():
         QMessageBox,
     )
     from packaging import version
+    import requests
     
     import randomizer
     import hashcollection
