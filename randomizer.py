@@ -8,6 +8,7 @@ from oeadwrappers import *
 from ruamel.yaml import YAML
 from lms.message.msbtio import read_msbt as readMSBT
 from lms.message.msbtio import write_msbt as writeMSBT
+from lms.message.msbtio import write_msbt_path as writeMSBTPath
 from lms.message.msbt import MSBT
 from lms.project.msbp import MSBP
 
@@ -180,6 +181,7 @@ def dialogueRandomizer(msbtPath):
         data = file.read()
         msbt = readMSBT(data)
 
+    finalMSBT = ''
     entryNames = []
 
     entry = msbt.entries[4]
@@ -192,8 +194,9 @@ def dialogueRandomizer(msbtPath):
     for item2, itemShuffled in zip(msbt.entries, entryNames):
         item2.name = itemShuffled
 
-    with open (msbtPath, "wb") as file:
-        file = writeMSBT(msbt)
+    
+    finalMSBT = writeMSBT(msbt)
+    writeMSBTPath(msbtPath, msbt)
 
 def updateBossStageNumbers(mapInfoYAML, bossStageNames): # Updates the MapInfo yaml with the correct boss stage numbers, this is seperate due to the different numbering pattern for bosses
                               # TODO: somehow merge this with updateStageNumber?
@@ -314,7 +317,7 @@ def rebuildStaticPack(extractedStaticPackDir):
                     print(f"Error deleting {filePath}: {e}")
     if isKettles:
         packSARC(f"{World00ArchivePath}_extracted", World00ArchivePath, compress=True)
-    shutil.rmtree(f"{World00ArchivePath}_extracted") # Cleanup
+    os.rmdir(f"{World00ArchivePath}_extracted") # Cleanup
     packSARC(extractedStaticPackDir, packDirectoryPath + 'Static.pack', compress=False)
 
 def addEditedWeaponUpgradeUI():
@@ -403,7 +406,6 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
         convertToBYAML(mapInfoYAML)
         rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
-    
-    performFinishingTouches(options, splatoonFilesystemRoot)
 
+    performFinishingTouches(options, splatoonFilesystemRoot)
 
