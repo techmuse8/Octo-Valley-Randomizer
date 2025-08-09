@@ -314,7 +314,7 @@ def rebuildStaticPack(extractedStaticPackDir):
                     print(f"Error deleting {filePath}: {e}")
     if isKettles:
         packSARC(f"{World00ArchivePath}_extracted", World00ArchivePath, compress=True)
-    os.rmdir(f"{World00ArchivePath}_extracted") # Cleanup
+    shutil.rmtree(f"{World00ArchivePath}_extracted") # Cleanup
     packSARC(extractedStaticPackDir, packDirectoryPath + 'Static.pack', compress=False)
 
 def addEditedWeaponUpgradeUI():
@@ -405,4 +405,5 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
     
     performFinishingTouches(options, splatoonFilesystemRoot)
+
 
