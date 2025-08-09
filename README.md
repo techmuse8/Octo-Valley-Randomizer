@@ -5,7 +5,7 @@ A randomizer for Splatoon 1's Octo Valley singleplayer campaign with a basic GUI
 
 ## Features
 As of writing, these are the aspects that are able to be randomized/shuffled:
-- Kettles
+- Kettles (bosses as well, though the boss kettles are randomized with each other with the exception of DJ Octavio, who is still the final boss)
 - Ink colors (with the option to choose the color sets from either Octo Valley or multiplayer battles)
 - Mission dialogue
 - Stage music
