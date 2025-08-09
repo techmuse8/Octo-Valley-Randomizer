@@ -97,7 +97,6 @@ def randomizeInkColors(mapInfoYAML, inkColorSetting):
         data = yaml.load(f)
 
     if not isinstance(data, list):
-        print("Error: The YAML structure is not a list.")
         return
 
     for obj in data:
@@ -315,7 +314,7 @@ def rebuildStaticPack(extractedStaticPackDir):
                     print(f"Error deleting {filePath}: {e}")
     if isKettles:
         packSARC(f"{World00ArchivePath}_extracted", World00ArchivePath, compress=True)
-    #os.remove(f"{World00ArchivePath}_extracted") # Cleanup
+    os.rmdir(f"{World00ArchivePath}_extracted") # Cleanup
     packSARC(extractedStaticPackDir, packDirectoryPath + 'Static.pack', compress=False)
 
 def addEditedWeaponUpgradeUI():
@@ -327,7 +326,7 @@ def addEditedWeaponUpgradeUI():
     packLayoutArchives('Wdm_Reinforce_00')
 
 def addLayoutEdits(options):
-    """Adds in the randomizer logo and the custom tutorial images."""
+    """Adds in the randomizer logo and the custom tutorial image and text."""
     extractLayoutArchives('Tut_TutorialPicture_00')
     extractLayoutArchives('Plz_Title_00')
 

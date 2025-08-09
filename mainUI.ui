@@ -58,7 +58,11 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="randomizerSeedBox"/>
+         <widget class="QLineEdit" name="randomizerSeedBox">
+          <property name="placeholderText">
+           <string>If left blank, a seed will be randomly generated.</string>
+          </property>
+         </widget>
         </item>
         <item row="0" column="2">
          <widget class="QPushButton" name="browseButton">
@@ -262,6 +266,8 @@
      <string>Help</string>
     </property>
     <addaction name="actionCheck_for_Updates"/>
+    <addaction name="separator"/>
+    <addaction name="actionDocumentation"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -269,6 +275,11 @@
   <action name="actionCheck_for_Updates">
    <property name="text">
     <string>Check for Updates...</string>
+   </property>
+  </action>
+  <action name="actionDocumentation">
+   <property name="text">
+    <string>Documentation</string>
    </property>
   </action>
  </widget>

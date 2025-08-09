@@ -55,6 +55,7 @@ def init():
             self.inkColorSetDropdown.setEnabled(False)
             self.randomizeButton.clicked.connect(lambda: self.startRandomization(self.splatoon1Path.text()))
             self.actionCheck_for_Updates.triggered.connect(self.checkForUpdates)
+            self.actionDocumentation.triggered.connect(self.openDocumentationPage)
             self.gameRegion = ''
             self.randomizerVersion = '0.1.0'
             self.titleID = ''
@@ -125,6 +126,8 @@ def init():
                 response = self.showMessageBox("Update Checker", f"You're on the latest version! ({currentVersion})", 
                                             QMessageBox.Information, QMessageBox.Yes)
 
+        def openDocumentationPage(self):
+            QDesktopServices.openUrl(QUrl("https://github.com/techmuse8/Octo-Valley-Randomizer/wiki"))
 
         def updateInkColorDropdownState(self, state):
             if state == Qt.Checked:
@@ -202,6 +205,7 @@ def init():
                 self.showErrorDialog('Error!', 'Ensure that you have selected a Splatoon 1 dump!')
 
         def copyOutputRandomizer(self, outputRandoDir):
+
             os.makedirs(outputRandoDir, exist_ok=True)
             os.makedirs(f'{outputRandoDir}/Pack', exist_ok=True)
             os.makedirs(f'{outputRandoDir}/Message', exist_ok=True)
@@ -214,6 +218,12 @@ def init():
                     shutil.copy(f'Splatoon_Rando_Files_work/Message/{entry}', f'{outputRandoDir}/Message/')
 
         def startRandomization(self, splatoon1DirectoryPath):
+            """Intializes the randomizer."""
+            
+            currentSeed = self.randomizerSeedBox.text()
+            if len(currentSeed) <= 0:
+                self.generateSeed()
+
             self.progressTextbox.setText("Randomizing: Please wait...")
             self.progressTextbox.setStyleSheet("color: black;")
             QApplication.processEvents()
@@ -238,11 +248,16 @@ def init():
             randomizer.setupRandomization("Splatoon_Rando_Files_work", self.randomizerSeedBox.text(), options)
 
             if self.platformDropdown.currentIndex() == 0: # For Wii U
-                outputRandoDir = os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}/content')
-                self.copyOutputRandomizer(outputRandoDir)
+                
+                outputRandoDir = os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}')
+                if os.path.isdir(outputRandoDir): # Yet another cleanup check
+                    shutil.rmtree(outputRandoDir)
+                self.copyOutputRandomizer(outputRandoDir + '/content')
 
             if self.platformDropdown.currentIndex() == 1: # For Cemu
                 outputRandoDir = 'output/Cemu/' + f'{self.randomizerSeedBox.text()}/' + f'Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}'
+                if os.path.isdir(outputRandoDir):
+                    shutil.rmtree(outputRandoDir)
                 self.copyOutputRandomizer(outputRandoDir + '/content')
                 with open ('assets/rules.txt', 'r') as file:
                     cemuRulesTxt = file.read()
@@ -304,6 +319,7 @@ def main():
 
     logging.info("Application started.")
 
+    # Here we check if the user has all of the dependencies installed or not
     for package in dependencycheck.dependencies:
         isAllDepsInstalled = dependencycheck.checkIsMissing(package)
 
