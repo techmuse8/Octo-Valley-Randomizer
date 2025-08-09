@@ -9,16 +9,17 @@ import logging
 import datetime
 import importlib.util
 import subprocess
+import requests
 
-from dependencycheck import *
+import dependencycheck
 
 globalGameDirectoryPath = '' 
 
 def init():
     
     from PyQt5 import uic
-    from PyQt5.QtGui import QIcon
-    from PyQt5.QtCore import Qt, QSize
+    from PyQt5.QtGui import QIcon, QDesktopServices
+    from PyQt5.QtCore import Qt, QSize, QUrl
     from PyQt5.QtWidgets import (
         QApplication,
         QCheckBox,
@@ -27,7 +28,8 @@ def init():
         QFileDialog,
         QMessageBox,
     )
-
+    from packaging import version
+    
     import randomizer
     import hashcollection
 
@@ -52,8 +54,9 @@ def init():
             self.setCentralWidget(centralWidget)
             self.inkColorSetDropdown.setEnabled(False)
             self.randomizeButton.clicked.connect(lambda: self.startRandomization(self.splatoon1Path.text()))
+            self.actionCheck_for_Updates.triggered.connect(self.checkForUpdates)
             self.gameRegion = ''
-            self.gameVersion = ''
+            self.randomizerVersion = '0.1.0'
             self.titleID = ''
             self.titleIDs = {
                 "US": "0005000010176900",
@@ -76,13 +79,20 @@ def init():
             dlg.setStandardButtons(QMessageBox.Ok)
             dlg.exec()
 
+        def showMessageBox(self, title, message, icon, buttons):
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle(title)
+            dlg.setText(message)
+            dlg.setIcon(icon)
+            dlg.setStandardButtons(buttons)
+            return dlg.exec()
+
         def openDirectoryDialog(self):
             global globalGameDirectoryPath
             directoryPath = QFileDialog.getExistingDirectory(self, "Select the 'content' folder of your Splatoon 1 dump")
             if self.checkForValidGameFiles(directoryPath):
                 print(directoryPath)
                 print(self.gameRegion)
-                print(self.gameVersion)
                 globalGameDirectoryPath = directoryPath
                 self.splatoon1Path.setText(directoryPath)
                 self.updateRandomizeButtonState()
@@ -99,6 +109,22 @@ def init():
             pathText = self.splatoon1Path.text().strip()
             hasValidPath = len(pathText) > 0
             self.randomizeButton.setEnabled(anyChecked and hasValidPath)
+
+        def checkForUpdates(self):
+            githubResponse = requests.get("https://api.github.com/repos/techmuse8/Octo-Valley-Randomizer/releases/latest")
+            currentVersion = version.parse(self.randomizerVersion)
+            latestVersion = (githubResponse.json()["tag_name"])
+            latestVersionStripped = version.parse(latestVersion.strip("v"))
+            if latestVersionStripped > currentVersion:
+                response = self.showMessageBox("Update Checker", f"Version: {latestVersionStripped} is now available! Would you like to visit the GitHub releases page to get the latest version?", 
+                                            QMessageBox.Question, QMessageBox.Yes | QMessageBox.No)
+                if response == QMessageBox.Yes:
+                    QDesktopServices.openUrl(QUrl((githubResponse.json()["html_url"])))
+                
+            elif latestVersionStripped == currentVersion:
+                response = self.showMessageBox("Update Checker", f"You're on the latest version! ({currentVersion})", 
+                                            QMessageBox.Information, QMessageBox.Yes)
+
 
         def updateInkColorDropdownState(self, state):
             if state == Qt.Checked:
@@ -154,6 +180,7 @@ def init():
                     return "US"
                 elif "JP" in filename:
                     return "JP"
+                
         def getTitleID(self, region):
             """Returns a title ID based on the input region."""
             return self.titleIDs.get(region, None)
@@ -167,7 +194,6 @@ def init():
                 if self.checkGameFileHashes(packFolder, messageFolder, hashcollection.expected_hashes_2_12_1) == True: # If so, make sure that the selected dump is a valid 2.12.1 one
                     self.gameRegion = self.checkGameRegion(messageFolder)
                     self.titleID = self.getTitleID(self.gameRegion)
-                    self.gameVersion = "2.12.1"
                     return True
                 else:
                     self.showErrorDialog('Error!', 'The selected Splatoon 1 dump is invalid! Ensure that your game files are valid.')
@@ -191,22 +217,13 @@ def init():
             self.progressTextbox.setText("Randomizing: Please wait...")
             self.progressTextbox.setStyleSheet("color: black;")
             QApplication.processEvents()
-            try:
-                shutil.copytree(f"{splatoon1DirectoryPath}/Pack", "Splatoon_Rando_Files_work/Pack")
-                shutil.copytree(f"{splatoon1DirectoryPath}/Message", "Splatoon_Rando_Files_work/Message")
-                shutil.copy(f"{splatoon1DirectoryPath}/Pack/Static.pack", './Static.pack')
 
-            except FileExistsError:
-                dlg = QMessageBox(self)
-                dlg.setWindowTitle("Warning!")
-                dlg.setText("An existing randomization already exists! Would you like to replace the current one?")
-                dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-                dlg.setIcon(QMessageBox.Warning)
-                button = dlg.exec()
+            if os.path.isdir("Splatoon_Rando_Files_work"): # Clean up check
+                shutil.rmtree("Splatoon_Rando_Files_work")
 
-                if button == QMessageBox.No:
-                    return                
-                shutil.rmtree("Splatoon_Rando_Files_work")   
+            shutil.copytree(f"{splatoon1DirectoryPath}/Pack", "Splatoon_Rando_Files_work/Pack")
+            shutil.copytree(f"{splatoon1DirectoryPath}/Message", "Splatoon_Rando_Files_work/Message")
+            shutil.copy(f"{splatoon1DirectoryPath}/Pack/Static.pack", './Static.pack')
 
             options = {
                 "heroWeapons": self.heroWeaponCheckBox.isChecked(),
@@ -258,7 +275,7 @@ def init():
             sys.mainWindow.progressTextbox.setText("An error has occured!")
             sys.mainWindow.progressTextbox.setStyleSheet("color: red")
             QApplication.processEvents()
-            msg.setText("An exception has occured! Please check the log file for details.")
+            msg.setText("An exception has occured! Please check the log file for more details.")
             msg.setDetailedText(f"{exctype.__name__}: {value}")
             msg.exec()
 
@@ -266,17 +283,14 @@ def init():
 
     sys.excepthook = exceptionHook
 
-    def checkForDependencies():
-        pass
-
     app = QApplication(sys.argv)
     window = MainWindow()
     sys.mainWindow = window
     window.show()
     app.exec()
 
-
 def main():
+    print("in main")
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     logFilename = f"logs/randomizer_log_{timestamp}.txt"
 
@@ -291,16 +305,16 @@ def main():
 
     logging.info("Application started.")
 
-    for package in dependencies:
-        isAllDepsInstalled = checkIsMissing(package)
+    for package in dependencycheck.dependencies:
+        isAllDepsInstalled = dependencycheck.checkIsMissing(package)
 
     if isAllDepsInstalled == False:
-        packageString = ', '.join(missingDependencies)
+        packageString = ', '.join(dependencycheck.missingDependencies)
         print(packageString)
         response = input(f"The following dependencies are required to use this program but aren't installed: {packageString}.\nWould you like to install them now? [y/n]\n").strip().lower()
         if response == 'y': 
             subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--break-system-packages"], stdout=sys.stdout, stderr=sys.stderr) # I know there's --break-system-packages but idc
-            print("\nThe required dependencies have all been installed! Please re-run the script in order to properly start the program.")
+            print("\nThe required dependencies have all been installed! Please re-run the randomizer in order to use it.")
             exit()
         else:
             print('Terminating execution.')

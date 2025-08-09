@@ -1,0 +1,6 @@
+PyQt5==5.15.11
+ruamel.yaml==0.17.0
+oead==1.2.9.post4
+PyLibMS==3.0.8
+requests>=2.32.4
+packaging>=25.0

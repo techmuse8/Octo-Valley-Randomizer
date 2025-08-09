@@ -194,7 +194,7 @@ def dialogueRandomizer(msbtPath):
         item2.name = itemShuffled
 
     with open (msbtPath, "wb") as file:
-        writeMSBT(file, msbt)
+        file = writeMSBT(msbt)
 
 def updateBossStageNumbers(mapInfoYAML, bossStageNames): # Updates the MapInfo yaml with the correct boss stage numbers, this is seperate due to the different numbering pattern for bosses
                               # TODO: somehow merge this with updateStageNumber?
