@@ -336,8 +336,8 @@ def addLayoutEdits(options):
 
     shutil.copy('assets/Rando Title Screen UI and Logo/GambitLogo_00^l.bflim', extTitleLayoutArchiveDir + 'timg/GambitLogo_00^l.bflim')
     shutil.copy('assets/Rando Title Screen UI and Logo/Plz_Title_00.bflyt', extTitleLayoutArchiveDir + 'blyt/Plz_Title_00.bflyt')
-    shutil.copy('assets/Tutorial Images/TutorialPic_00^o.bflim', extTutorialLayoutArchiveDir + 'timg/TutorialPic_00^o.bflim')
-    shutil.copy('assets/Tutorial Images/TutorialPic_01^o.bflim', extTutorialLayoutArchiveDir + 'timg/TutorialPic_01^o.bflim')
+    shutil.copy('assets/Tutorial Images and Text/TutorialPic_00^o.bflim', extTutorialLayoutArchiveDir + 'timg/TutorialPic_00^o.bflim')
+    shutil.copy('assets/Tutorial Images and Text/TutorialPic_01^o.bflim', extTutorialLayoutArchiveDir + 'timg/TutorialPic_01^o.bflim')
 
     packLayoutArchives('Tut_TutorialPicture_00')
     packLayoutArchives('Plz_Title_00')
@@ -347,16 +347,24 @@ def addLayoutEdits(options):
 
     packSARC(packDirectoryPath + 'Layout.pack_extracted', packDirectoryPath + 'Layout.pack', compress=False)
 
-def performFinishingTouches(options):
+def addCustomText(splatoonRandoFiles):
+    for item in os.listdir(f"{splatoonRandoFiles}/Message"):
+        if item.startswith("CommonMsg") and item.endswith(".szs"):
+            extractSARC(f"{splatoonRandoFiles}/Message/{item}")
+            shutil.copy("assets/Tutorial Images and Text/Narration_Tutorial.msbt", f"{splatoonRandoFiles}/Message/" + item + '_extracted/Narration/Narration_Tutorial.msbt')
+            packSARC(f"{splatoonRandoFiles}/Message/" + item + '_extracted', f"{splatoonRandoFiles}/Message/" + item, compress=True)
+
+def performFinishingTouches(options, splatoonFilesystemRoot):
     if os.path.isdir(packDirectoryPath + 'Layout.pack_extracted'):
         addLayoutEdits(options)
     else:
         extractSARC(packDirectoryPath + 'Layout.pack')
         addLayoutEdits(options)
+        addCustomText(splatoonFilesystemRoot)
     
 def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     random.seed(randomizerSeed)
-    global World00ArchivePath, packDirectoryPath, mapInfoYAML, updatedStageNo, stageNames, staticPackDir, isKettles, isHeroWeapon, layoutFolder
+    global World00ArchivePath, packDirectoryPath, mapInfoYAML, updatedStageNo, stageNames, staticPackDir, isKettles, layoutFolder
     updatedStageNo = []
     packDirectoryPath = splatoonFilesystemRoot + '/Pack/'
     staticPackDir = packDirectoryPath + 'Static.pack_extracted/'
@@ -397,5 +405,5 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         convertToBYAML(mapInfoYAML)
         rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
     
-    performFinishingTouches(options)
+    performFinishingTouches(options, splatoonFilesystemRoot)
 
