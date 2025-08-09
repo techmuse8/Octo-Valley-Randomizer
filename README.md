@@ -16,16 +16,18 @@ As of writing, these are the aspects that are able to be randomized/shuffled:
 
 Requires at least [Python 3.12](https://www.python.org/downloads/release/python-3127/) with the following dependencies installed from pip: 
 
-- PyQt5
-- ruamel.yaml
-- PylibMS 
-- oead
-- requests
-- packaging
+- [PyQt5](https://pypi.org/project/PyQt5/)
+- [ruamel.yaml](https://pypi.org/project/ruamel.yaml/)
+- [PyLibMS](https://pypi.org/project/PyLibMS/) 
+- [oead](https://pypi.org/project/oead/)
+- [requests](https://pypi.org/project/requests/)
+- [packaging](https://pypi.org/project/packaging)
+
+To run the randomizer assuming Python 3.12 or new is installed, simply open a command prompt/terminal session in the folder containing the randomizer, then run `python3 main.py`. (`python3` is to be replaced with `py -3` if you're on Windows.) Alternatively, Windows users can also just double-click the helper batch script named `run-randomizer-windows.bat`.
 
 Upon running the randomizer, the program will check all of the above dependencies installed and if not, offer to install them should the user agree to do so.
 
-Alternatively, you can also run `python3 -m pip install --r requirements.txt` (`python3` is to be replaced with `py -3` if you're on Windows) beforehand to install of the dependencies for you.
+Alternatively, you can also run `python3 -m pip install --r requirements.txt` beforehand to install of the dependencies for you.
 
 This randomizer is compatiable with both real Wii U hardware using Aroma custom firmware (installation guide can be found [here](https://wiiu.hacks.guide/)) and the Cemu emulator. If you need details on how to legally obtain the files required to use the randomizer, consult [this guide](https://github.com/techmuse8/Octo-Valley-Randomizer/wiki/Dumping-Files-for-the-Randomizer) on the wiki. 
 
