@@ -19,6 +19,11 @@ Requires at least [Python 3.12](https://www.python.org/downloads/release/python-
 - ruamel.yaml
 - PylibMS 
 - oead
+- requests
+- packaging
+
+Upon running the randomizer, the program will check if you have if you have the all of the above dependencies installed, and will offer to install them should the user agree to do so.
+Alternatively, you can also run `python3 -m pip install --r requirements.txt` (`python3` is to be replaced with `py -3` if you're on Windows) beforehand to install of the dependencies for you.
 
 ## Credits
 
