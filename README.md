@@ -44,5 +44,5 @@ Please consult [the wiki](https://github.com/techmuse8/Octo-Valley-Randomizer/wi
 
 - [Pirlo](https://twitter.com/0x1CAA9C5C) - Making a patch that lets the Hero Roller work properly in singleplayer
 - [Archipelago Discord Server](https://discord.gg/8Z65BR2) - Feedback, feature suggestions
-- [AboodXD](https://github.com/aboood40091) - Author of the .hax patch format used for code patching on real Wii U hardware
+- [Kinnay](https://github.com/kinnay) - Author of the .hax patch format used for code patching on real Wii U hardware
 - [theawesomecoder61](https://github.com/theawesomecoder61/) - Author of [CodePatchPlugin](https://github.com/theawesomecoder61/CodePatchPlugin), documentation of the .hax file format and the assembler that was used for creating the .hax patch files
