@@ -74,3 +74,4 @@ def convertToBYAML(inputYaml):
     
     with open(f"{outputBYAMLName[0]}.byaml", "wb") as f:
         f.write(oead.byml.to_binary(data=convdBYAML, big_endian=True, version=1))
+

@@ -3,9 +3,11 @@ import random
 from pathlib import Path
 import shutil
 import logging
+import time
 
 from oeadwrappers import *
 from ruamel.yaml import YAML
+from concurrent.futures import ThreadPoolExecutor
 from lms.message.msbtio import read_msbt as readMSBT
 from lms.message.msbtio import write_msbt as writeMSBT
 from lms.message.msbtio import write_msbt_path as writeMSBTPath
@@ -198,6 +200,93 @@ def dialogueRandomizer(msbtPath):
     finalMSBT = writeMSBT(msbt)
     writeMSBTPath(msbtPath, msbt)
 
+def processMapFile(filename, mapFolderPath):
+    if filename.endswith("_Msn.szs") and not filename.startswith("Fld_Boss"):
+            mapFilePath = os.path.join(mapFolderPath, filename)
+            print(filename)
+            extractSARC(mapFilePath)
+            mapName = os.path.splitext(filename)[0]
+            extractedFolder = os.path.join(mapFolderPath, f'{mapName}.szs_extracted')
+            stageBYAML = mapFolderPath + f'{mapName}.szs_extracted/{mapName}.byaml'
+            stageYAML = mapFolderPath + f'{mapName}.szs_extracted/{mapName}.yaml'
+            shutil.copy(f'assets/patched_byamls/{mapName}.byaml', stageBYAML)
+            convertFromBYAML(stageBYAML)
+            enemyRandomizer(stageYAML)
+            convertToBYAML(stageYAML)
+            os.remove(stageYAML)
+            packSARC(extractedFolder, mapFilePath, compress=True)
+            print('packing map archives')
+            time.sleep(0.1)
+            shutil.rmtree(extractedFolder)
+            print('deleting map archives')
+
+def enemyRandomizer(stageYAML):
+    yaml = YAML()
+    yaml.preserve_quotes = True
+
+    allEnemies = [
+    "Enm_Ball",
+    "Enm_Charge",
+    "Enm_Cleaner",
+    "Enm_Hohei",
+    #"Enm_Rival00",
+    "Enm_Stamp",
+    "Enm_Takodozer",
+    "Enm_Takolien",
+    "Enm_TakolienEasy",
+    "Enm_TakolienFixed",
+    "Enm_TakolienFixedEasy",
+    "Enm_Takopter",
+    "Enm_TakopterBomb",
+    #"Enm_TakopterTornado"
+]
+
+    restrictedEnemies = ["Enm_Cleaner", "Enm_TakolienS", "Enm_Hohei", "Enm_Takodozer"]
+
+    with open(stageYAML, 'r', encoding='utf-8') as file:
+        yamlData = yaml.load(file)
+
+    totalRandomized = 0
+    logicReplaced = []
+
+    # Randomize all the enemies first
+    for obj in yamlData["Objs"]:
+        unitConfigName = obj.get("UnitConfigName", "").strip()
+        if unitConfigName.startswith("Enm_"):
+            newEnemy = random.choice(allEnemies)
+            obj["UnitConfigName"] = newEnemy
+            totalRandomized += 1
+
+    # Then, apply logic to reroll restricted enemies with Switch links
+    # so the player won't get stuck in places where they have to defeat everything to progress
+    for obj in yamlData["Objs"]:
+        unitConfigName = obj.get("UnitConfigName", "").strip()
+        objId = obj.get("Id", "Unknown")
+
+        if unitConfigName in restrictedEnemies:
+            links = obj.get("Links", {})
+            switchLinks = next((v for k, v in links.items() if k.strip().lower() == "switch"), [])
+            if switchLinks:
+                newEnemy = random.choice([e for e in allEnemies if e not in restrictedEnemies])
+                obj["UnitConfigName"] = newEnemy
+                logicReplaced.append((objId, unitConfigName, newEnemy))
+
+    with open(stageYAML, 'w', encoding='utf-8') as file:
+        yaml.dump(yamlData, file)
+
+    print(f"Total enemies randomized: {totalRandomized}")
+    if logicReplaced:
+        print(f"Special logic replacements ({len(logicReplaced)}):")
+        for objId, oldEnemy, newEnemy in logicReplaced:
+            print(f"  - {objId}: {oldEnemy} → {newEnemy}")
+
+def randomizeEnemies(mapFolderPath):
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        files = os.listdir(mapFolderPath)
+        for filename in files:
+            executor.submit(processMapFile, filename, mapFolderPath)
+
+
 def updateBossStageNumbers(mapInfoYAML, bossStageNames): # Updates the MapInfo yaml with the correct boss stage numbers, this is seperate due to the different numbering pattern for bosses
                               # TODO: somehow merge this with updateStageNumber?
     with open(mapInfoYAML, 'r') as f:
@@ -372,6 +461,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     staticPackDir = packDirectoryPath + 'Static.pack_extracted/'
     layoutFolder = packDirectoryPath + 'Layout.pack_extracted/Layout/'
     isKettles = False
+    mapFolderPath = splatoonFilesystemRoot + '/Pack/' + 'Static.pack_extracted/Map/'
 
     if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
         extractSARC(splatoonFilesystemRoot + '/Pack/' + 'Static.pack')
@@ -382,6 +472,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         print("Randomizing Kettles")
         isKettles = True
         World00ArchivePath = splatoonFilesystemRoot + '/Pack/' + 'Static.pack_extracted/Map/Fld_World00_Wld.szs'
+        
         extractSARC(World00ArchivePath)
         convertFromBYAML(World00ArchivePath + '_extracted/Fld_World00_Wld.byaml')
         randomizeKettles()
@@ -403,10 +494,13 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         print("Randomizing Hero Weapon")
         randomizeHeroWeapon(options["platform"])
     
+    randomizeEnemies(mapFolderPath)
+    #exit()
     if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
         convertToBYAML(mapInfoYAML)
         rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
 
-    performFinishingTouches(options, splatoonFilesystemRoot)
+    
 
+    performFinishingTouches(options, splatoonFilesystemRoot)
 
