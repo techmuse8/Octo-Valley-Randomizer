@@ -29,7 +29,7 @@ def init():
     )
     from packaging import version
     import requests
-    
+
     import randomizer
     import hashcollection
 
@@ -57,7 +57,7 @@ def init():
             self.actionCheck_for_Updates.triggered.connect(self.checkForUpdates)
             self.actionDocumentation.triggered.connect(self.openDocumentationPage)
             self.gameRegion = ''
-            self.randomizerVersion = '0.1.0'
+            self.randomizerVersion = '0.1.1'
             self.titleID = ''
             self.titleIDs = {
                 "US": "0005000010176900",
