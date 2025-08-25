@@ -7,7 +7,7 @@ import time
 
 from oeadwrappers import *
 from ruamel.yaml import YAML
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from lms.message.msbtio import read_msbt as readMSBT
 from lms.message.msbtio import write_msbt as writeMSBT
 from lms.message.msbtio import write_msbt_path as writeMSBTPath
@@ -114,19 +114,31 @@ def addVSInkColors(setting):
     parameterPath = staticPackDir + os.path.join("Parameter")
     workFolder = (os.path.join(parameterPath, "work"))
     os.makedirs(workFolder, exist_ok=True)
+    vsInkColors = []
     msnInkColors = []
 
-    if setting == 1:
+    if setting == 1 or 2:
         for file in os.listdir(parameterPath):
             if 'GfxSetting_Vss' in file:
                 shutil.copy(os.path.join(parameterPath, file), (os.path.join(parameterPath, "work")))
+                vsInkColors.append(file)
             elif 'GfxSetting_Msn' in file:
                 msnInkColors.append(file)
         
         
         delete4RandomInkColors(workFolder)
         for i, file in enumerate(os.listdir(workFolder)):
-            shutil.move(os.path.join(workFolder, file), os.path.join(parameterPath, msnInkColors[i]))
+            if setting == 1:
+                shutil.move(os.path.join(workFolder, file), os.path.join(parameterPath, msnInkColors[i]))
+            elif setting == 2:
+                chosenColorSet = random.choice([vsInkColors, msnInkColors])
+                if 'GfxSetting_Vss' in chosenColorSet[i]:
+                    print('Picked a VS color')
+                    shutil.move(os.path.join(workFolder, file), os.path.join(parameterPath, msnInkColors[i]))
+                elif 'GfxSetting_Msn' in chosenColorSet[i]:
+                    print('Picked a Msn color')
+                    continue
+
 
 def delete4RandomInkColors(folderPath, count=4):
     files = [f for f in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, f))]
@@ -200,27 +212,35 @@ def dialogueRandomizer(msbtPath):
     finalMSBT = writeMSBT(msbt)
     writeMSBTPath(msbtPath, msbt)
 
-def processMapFile(filename, mapFolderPath):
-    if filename.endswith("_Msn.szs") and not filename.startswith("Fld_Boss"):
+def extractMapFiles(mapFolderPath):
+    for filename in os.listdir(mapFolderPath):
+        if filename.endswith("_Msn.szs") and not filename.startswith("Fld_Boss"):
             mapFilePath = os.path.join(mapFolderPath, filename)
             print(filename)
             extractSARC(mapFilePath)
+            
+def processMapFile(filename, mapFolderPath):
+    if filename.endswith("_Msn.szs") and not filename.startswith("Fld_Boss"):
+            mapFilePath = os.path.join(mapFolderPath, filename)
             mapName = os.path.splitext(filename)[0]
             extractedFolder = os.path.join(mapFolderPath, f'{mapName}.szs_extracted')
             stageBYAML = mapFolderPath + f'{mapName}.szs_extracted/{mapName}.byaml'
             stageYAML = mapFolderPath + f'{mapName}.szs_extracted/{mapName}.yaml'
+
             shutil.copy(f'assets/patched_byamls/{mapName}.byaml', stageBYAML)
             convertFromBYAML(stageBYAML)
             enemyRandomizer(stageYAML)
             convertToBYAML(stageYAML)
             os.remove(stageYAML)
+
             packSARC(extractedFolder, mapFilePath, compress=True)
             print('packing map archives')
-            time.sleep(0.1)
+            #time.sleep(0.1)
             shutil.rmtree(extractedFolder)
             print('deleting map archives')
 
 def enemyRandomizer(stageYAML):
+    """Randomizes all the enemies in a stage, with logic applied so the player won't get stuck."""
     yaml = YAML()
     yaml.preserve_quotes = True
 
@@ -241,7 +261,7 @@ def enemyRandomizer(stageYAML):
     #"Enm_TakopterTornado"
 ]
 
-    restrictedEnemies = ["Enm_Cleaner", "Enm_TakolienS", "Enm_Hohei", "Enm_Takodozer"]
+    restrictedEnemies = ["Enm_Cleaner", "Enm_TakolienS", "Enm_Takodozer"] # Squee-G, Diving Octarian, Flooder
 
     with open(stageYAML, 'r', encoding='utf-8') as file:
         yamlData = yaml.load(file)
@@ -252,7 +272,36 @@ def enemyRandomizer(stageYAML):
     # Randomize all the enemies first
     for obj in yamlData["Objs"]:
         unitConfigName = obj.get("UnitConfigName", "").strip()
-        if unitConfigName.startswith("Enm_"):
+        if unitConfigName == "Enm_Rival00": # Moves the Octoling locations in areas where you can reach them for the following stages
+            if "Propeller01" in stageYAML: # Propeller Lift Fortress
+                obj['Translate']['X'] = 650.0
+                obj['Translate']['Y'] = 350.0
+                obj['Translate']['Z'] = 660.0
+
+            if "Sponge01" in stageYAML: # Floating Sponge Observatory
+                obj['Translate']['X'] = 600.0
+                obj['Translate']['Y'] = 459.0
+                obj['Translate']['Z'] = -480.0
+
+            if "PaintingLift01" in stageYAML: # Spinning Spreaders
+                obj['Translate']['X'] = -100.0
+                obj['Translate']['Y'] = 210.0
+                obj['Translate']['Z'] = 0.0
+
+        if 'Dozer01' in stageYAML: # Far-Flung Flooders case
+                if obj.get('Id') == 'obj116':
+                    print('FFF')
+                    obj["UnitConfigName"] = 'Enm_Cleaner' # Makes it so the enemy with the key properly spawns
+                    continue
+                if obj.get('Id') == 'obj361':
+                    obj["UnitConfigName"] = random.choice([e for e in allEnemies if e not in restrictedEnemies and e != "Enm_Ball"])
+                    continue                
+
+        if unitConfigName.startswith("Enm_") and unitConfigName != "Enm_TakopterTornado":
+            if obj.get('Id') in ['obj567', 'obj253'] and 'Trance00' in stageYAML: # Splat-Switch Revolution case
+                print('SSR Case')
+                continue
+
             newEnemy = random.choice(allEnemies)
             obj["UnitConfigName"] = newEnemy
             totalRandomized += 1
@@ -269,6 +318,7 @@ def enemyRandomizer(stageYAML):
             if switchLinks:
                 newEnemy = random.choice([e for e in allEnemies if e not in restrictedEnemies])
                 obj["UnitConfigName"] = newEnemy
+                obj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
                 logicReplaced.append((objId, unitConfigName, newEnemy))
 
     with open(stageYAML, 'w', encoding='utf-8') as file:
@@ -281,7 +331,8 @@ def enemyRandomizer(stageYAML):
             print(f"  - {objId}: {oldEnemy} → {newEnemy}")
 
 def randomizeEnemies(mapFolderPath):
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    extractMapFiles(mapFolderPath)
+    with ProcessPoolExecutor(max_workers = min(6, max(2, os.cpu_count() // 2))) as executor:
         files = os.listdir(mapFolderPath)
         for filename in files:
             executor.submit(processMapFile, filename, mapFolderPath)
@@ -406,7 +457,7 @@ def rebuildStaticPack(extractedStaticPackDir):
                     print(f"Error deleting {filePath}: {e}")
     if isKettles:
         packSARC(f"{World00ArchivePath}_extracted", World00ArchivePath, compress=True)
-    shutil.rmtree(f"{World00ArchivePath}_extracted") # Cleanup
+        shutil.rmtree(f"{World00ArchivePath}_extracted") # Cleanup
     packSARC(extractedStaticPackDir, packDirectoryPath + 'Static.pack', compress=False)
 
 def addEditedWeaponUpgradeUI():
@@ -463,7 +514,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     isKettles = False
     mapFolderPath = splatoonFilesystemRoot + '/Pack/' + 'Static.pack_extracted/Map/'
 
-    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
+    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"] or options["enemies"]:
         extractSARC(splatoonFilesystemRoot + '/Pack/' + 'Static.pack')
         convertFromBYAML(packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.byaml')
         mapInfoYAML = packDirectoryPath + 'Static.pack_extracted/Mush/MapInfo.yaml'
@@ -494,13 +545,14 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         print("Randomizing Hero Weapon")
         randomizeHeroWeapon(options["platform"])
     
-    randomizeEnemies(mapFolderPath)
-    #exit()
-    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"]:
+    if options["enemies"]:
+        randomizeEnemies(mapFolderPath)
+
+    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"] or options["enemies"]:
         convertToBYAML(mapInfoYAML)
         rebuildStaticPack(packDirectoryPath + 'Static.pack_extracted')
 
     
 
     performFinishingTouches(options, splatoonFilesystemRoot)
-
+    return True

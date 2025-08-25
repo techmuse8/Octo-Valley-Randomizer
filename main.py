@@ -18,13 +18,17 @@ def init():
     
     from PyQt5 import uic
     from PyQt5.QtGui import QIcon, QDesktopServices
-    from PyQt5.QtCore import Qt, QSize, QUrl
+    from PyQt5.QtCore import Qt, QSize, QUrl, QThread, pyqtSignal, QTimer
     from PyQt5.QtWidgets import (
         QApplication,
         QCheckBox,
         QMainWindow,
         QWidget,
         QFileDialog,
+        QDialog,
+        QVBoxLayout,
+        QLabel,
+        QProgressBar,
         QMessageBox,
     )
     from packaging import version
@@ -35,6 +39,54 @@ def init():
 
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
+    class RandomizationWorker(QThread):
+            progressUpdated = pyqtSignal(int)  # Emit an integer value for progress
+            statusUpdated = pyqtSignal(str)     # Emit a string for status messages
+            randomizationCompleted = pyqtSignal()
+            def __init__(self, splatoon1DirectoryPath: str, options: dict, seed: str, parent=None):
+                super().__init__(parent)
+                self.splatoon1DirectoryPath = splatoon1DirectoryPath
+                self.options = options
+                self.seed = seed
+            def run(self):
+                try:
+                    self.statusUpdated.emit("Randomizing: Please wait...")
+                    QApplication.processEvents()
+
+                    success = randomizer.setupRandomization(self.splatoon1DirectoryPath, self.seed, self.options)
+                    if success:
+                        self.randomizationCompleted.emit()
+                        self.statusUpdated.emit("Randomization completed!")
+                    else:
+                        self.progressUpdated.emit("Randomization failed!")
+                except Exception as e:
+                    print(f"Error in worker thread: {e}")  
+                    self.statusUpdated.emit("An error occurred during randomization.")
+                    self.progressUpdated.emit(0)
+                
+    class ProgressDialog(QDialog):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            
+            self.setWindowTitle("Randomization Progress")
+            self.setModal(True)
+            self.setFixedSize(300, 150)
+            layout = QVBoxLayout()
+            self.label = QLabel("Starting randomization...", self)
+            self.label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(self.label)
+            self.progressBar = QProgressBar(self) 
+            self.progressBar.setRange(0, 0)
+            layout.addWidget(self.progressBar)
+            self.progressBar.setAlignment(Qt.AlignCenter)
+            self.setLayout(layout)
+
+        def updateProgress(self, value):
+            self.progressBar.setValue(value)
+            
+        def setStatus(self, message):
+            self.label.setText(message)
+        
     class MainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
@@ -64,6 +116,7 @@ def init():
                 "EU": "0005000010176A00",
                 "JP": "0005000010162B00"
                             }
+            self.options = {}
             self.inkColorCheckBox.stateChanged.connect(self.updateInkColorDropdownState)
             
             self.checkboxes = self.findChildren(QCheckBox)
@@ -217,36 +270,21 @@ def init():
                 if os.path.isfile(fullEntryPath) and 'Msg' in entry:
                     shutil.copy(f'Splatoon_Rando_Files_work/Message/{entry}', f'{outputRandoDir}/Message/')
 
-        def startRandomization(self, splatoon1DirectoryPath):
-            """Intializes the randomizer."""
+        def updateProgress(self, message):
+                """Update progress message in the textbox."""
+                self.progressTextbox.setText(message)
+        
+        def randomizationCompleted(self):
+            """Handle completion of randomization."""
+            QTimer.singleShot(1000, self.progressDialog.close)
+            self.finalizeRandomization()
             
-            currentSeed = self.randomizerSeedBox.text()
-            if len(currentSeed) <= 0:
-                self.generateSeed()
-
-            self.progressTextbox.setText("Randomizing: Please wait...")
-            self.progressTextbox.setStyleSheet("color: black;")
-            QApplication.processEvents()
-
-            if os.path.isdir("Splatoon_Rando_Files_work"): # Clean up check
-                shutil.rmtree("Splatoon_Rando_Files_work")
-
-            shutil.copytree(f"{splatoon1DirectoryPath}/Pack", "Splatoon_Rando_Files_work/Pack")
-            shutil.copytree(f"{splatoon1DirectoryPath}/Message", "Splatoon_Rando_Files_work/Message")
-            shutil.copy(f"{splatoon1DirectoryPath}/Pack/Static.pack", './Static.pack')
-
-            options = {
-                "heroWeapons": self.heroWeaponCheckBox.isChecked(),
-                "kettles": self.kettlesCheckbox.isChecked(),
-                "inkColors": self.inkColorCheckBox.isChecked(),
-                "inkColorSet": self.inkColorSetDropdown.currentIndex(),
-                "music": self.musicCheckBox.isChecked(),
-                "missionDialogue": self.missionDialogueCheckBox.isChecked(),
-                "platform": self.platformDropdown.currentIndex(),
-            }
-
-            randomizer.setupRandomization("Splatoon_Rando_Files_work", self.randomizerSeedBox.text(), options)
-
+            self.progressTextbox.setStyleSheet("color: green;")
+            self.progressTextbox.setText("Randomization completed!")
+            self.randomizeButton.setEnabled(True)  # Enable the randomize button again if initially disabled
+        
+        def finalizeRandomization(self):
+            """Moves all the randomized files to a dedicated output folder."""
             if self.platformDropdown.currentIndex() == 0: # For Wii U
                 
                 outputRandoDir = os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}')
@@ -266,20 +304,62 @@ def init():
                 with open (outputRandoDir + '/rules.txt', "x") as file:
                     file.write(modifiedCemuRulesTxt)
                 
-            if options["heroWeapons"]:
-                if options["platform"] == 1:
+            if self.options["heroWeapons"]:
+                if self.options["platform"] == 1:
                     if os.path.exists('patches/cemu_OV_weapon.txt'):
                         print("Copying weapon patches for Cemu")
                         shutil.move("patches/cemu_OV_weapon.txt", outputRandoDir + '/patches.txt')
-                elif options["platform"] == 0:
+                elif self.options["platform"] == 0:
                     print('Copying weapon patches for Wii U')
                     if os.path.exists('patches/consoleWeaponPatches.hax'):    
                         os.makedirs(os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}'))
                         shutil.move("patches/consoleWeaponPatches.hax", 'output/Wii U/' + f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}/OctoValleyWeaponPatches.hax')
 
-            self.progressTextbox.setText("Randomization completed!")
-            self.progressTextbox.setStyleSheet("color: green;")
+            
             shutil.rmtree("Splatoon_Rando_Files_work") # Cleanup
+
+        def startRandomization(self, splatoon1DirectoryPath):
+            """Intializes the randomizer."""
+
+            self.progressDialog = ProgressDialog(self)
+            currentSeed = self.randomizerSeedBox.text()
+            if len(currentSeed) <= 0:
+                self.generateSeed()
+
+            self.progressDialog.show()
+            self.progressTextbox.setText("Randomizing: Please wait...")
+            self.progressTextbox.setStyleSheet("color: black;")
+            QApplication.processEvents()
+
+            if os.path.isdir("Splatoon_Rando_Files_work"): # Clean up check
+                shutil.rmtree("Splatoon_Rando_Files_work")
+
+            shutil.copytree(f"{splatoon1DirectoryPath}/Pack", "Splatoon_Rando_Files_work/Pack")
+            shutil.copytree(f"{splatoon1DirectoryPath}/Message", "Splatoon_Rando_Files_work/Message")
+            shutil.copy(f"{splatoon1DirectoryPath}/Pack/Static.pack", './Static.pack')
+
+            options = {
+                "heroWeapons": self.heroWeaponCheckBox.isChecked(),
+                "kettles": self.kettlesCheckbox.isChecked(),
+                "inkColors": self.inkColorCheckBox.isChecked(),
+                "inkColorSet": self.inkColorSetDropdown.currentIndex(),
+                "music": self.musicCheckBox.isChecked(),
+                "missionDialogue": self.missionDialogueCheckBox.isChecked(),
+                "platform": self.platformDropdown.currentIndex(),
+                "enemies": self.enemyCheckBox.isChecked(),
+            }
+
+            self.options = options
+            
+            
+            self.worker = RandomizationWorker("Splatoon_Rando_Files_work", options, currentSeed)
+            #self.worker.progressUpdated.connect(self.progressDialog.updateProgress)
+            self.worker.statusUpdated.connect(self.progressDialog.setStatus)
+            self.worker.randomizationCompleted.connect(self.randomizationCompleted)
+            self.worker.start()  # Start the thread
+
+            
+
 
     def exceptionHook(exctype, value, traceback):
             logging.exception("Unhandled exception:", exc_info=(exctype, value, traceback))
@@ -303,6 +383,8 @@ def init():
     sys.mainWindow = window
     window.show()
     app.exec()
+
+
 
 def main():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
