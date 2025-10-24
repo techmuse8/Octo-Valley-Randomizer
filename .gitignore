@@ -206,3 +206,11 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 .DS_Store
+
+# Custom code patches
+patches/__pycache__
+patches/project/temp
+patches/project/rpxs/*
+project/out
+patches/.vscode/settings.json
+patches/CLPC
