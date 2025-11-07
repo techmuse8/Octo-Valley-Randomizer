@@ -63,7 +63,14 @@ def convertFromBYAML(inputBYAML):
         print(outputYamlName[0])
     with open(f"{outputYamlName[0]}.yaml", "w") as file:
         file.write(ouputYAML)
-        
+
+def convertBYAMLToYAMLText(inputBYAML):
+    # print(inputBYAML)
+    with open(inputBYAML, "rb") as f:
+        info = oead.byml.from_binary(f.read())
+        outputYAML = oead.byml.to_text(info)
+        return outputYAML
+    
 def convertToBYAML(inputYaml):
     with open(inputYaml, "r", encoding="utf-8") as file:
         content = file.read()
@@ -75,3 +82,13 @@ def convertToBYAML(inputYaml):
     with open(f"{outputBYAMLName[0]}.byaml", "wb") as f:
         f.write(oead.byml.to_binary(data=convdBYAML, big_endian=True, version=1))
 
+def convertYAMLTextToBYAML(inputYaml, outputBYAMLName):
+   # with open(inputYaml, "r", encoding="utf-8") as file:
+    #    content = file.read()
+     
+    convdBYAML = oead.byml.from_text(inputYaml)
+    #outputBYAMLName = os.path.splitext(inputYaml)
+    #print(outputBYAMLName[0])
+    
+    with open(f"{outputBYAMLName[0]}.byaml", "wb") as f:
+        f.write(oead.byml.to_binary(data=convdBYAML, big_endian=True, version=1))

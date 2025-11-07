@@ -1,5 +1,7 @@
 expected_hashes_2_12_1 = {
     # MD5 hashes for version 2.12.1 files needed by the randomizer
+
+    "Gambit.rpx": "ee355d472795b252b325609ec1b7523f",
     "CommonMsg_EUde.szs": "12a0dc63f7a4cdf6555b16725d1d66a2",
     "CommonMsg_EUen.szs": "f367ef0077ad1a3f7b3a4837a43ee0e6",
     "CommonMsg_EUes.szs": "a770fc94172afe1ae060ac13e93b4fc4",
@@ -20,4 +22,5 @@ expected_hashes_2_12_1 = {
     "LayoutMsg_USfr.szs": "edcdcd04f2584630ca67f2c2204b0b07",
     "Layout.pack": "714f52aedfac3aeead8e2a3075ff3620",
     "Static.pack": "8af3f497f36276195b4d90b98df2b99c"
+    
 }

@@ -207,10 +207,17 @@ marimo/_lsp/
 __marimo__/
 .DS_Store
 
+## Project-specific
+
+# Randomizer
+logs
+original_rpx
+output
+Splatoon_Rando_Files_work
+
 # Custom code patches
-patches/__pycache__
-patches/project/temp
-patches/project/rpxs/*
-project/out
-patches/.vscode/settings.json
-patches/CLPC
+source_patches/__pycache__
+source_patches/project/temp
+source_patches/project/rpxs/*
+source_patches/project/out
+source_patches/CLPC

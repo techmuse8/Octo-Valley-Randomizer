@@ -4,10 +4,11 @@ from pathlib import Path
 import shutil
 import logging
 import time
+import io
 
 from oeadwrappers import *
 from ruamel.yaml import YAML
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from lms.message.msbtio import read_msbt as readMSBT
 from lms.message.msbtio import write_msbt as writeMSBT
 from lms.message.msbtio import write_msbt_path as writeMSBTPath
@@ -212,34 +213,19 @@ def dialogueRandomizer(msbtPath):
     finalMSBT = writeMSBT(msbt)
     writeMSBTPath(msbtPath, msbt)
 
-def extractMapFiles(mapFolderPath):
-    for filename in os.listdir(mapFolderPath):
-        if filename.endswith("_Msn.szs") and not filename.startswith("Fld_Boss"):
-            mapFilePath = os.path.join(mapFolderPath, filename)
-            print(filename)
-            extractSARC(mapFilePath)
+def extractMapFiles(mapFiles, mapFolderPath):
+    for filename in mapFiles:
+        mapFilePath = os.path.join(mapFolderPath, filename)
+        print(mapFilePath)
+        extractSARC(mapFilePath)
             
-def processMapFile(filename, mapFolderPath):
-    if filename.endswith("_Msn.szs") and not filename.startswith("Fld_Boss"):
-            mapFilePath = os.path.join(mapFolderPath, filename)
-            mapName = os.path.splitext(filename)[0]
-            extractedFolder = os.path.join(mapFolderPath, f'{mapName}.szs_extracted')
-            stageBYAML = mapFolderPath + f'{mapName}.szs_extracted/{mapName}.byaml'
-            stageYAML = mapFolderPath + f'{mapName}.szs_extracted/{mapName}.yaml'
+def processMapFile(filename):
+        mapName = os.path.splitext(filename)[0]
+        stageBYAMLConv = convertBYAMLToYAMLText(f'assets/patched_byamls/{mapName}.byaml')
+        stageYAML = enemyRandomizer(stageBYAMLConv, mapName)
+        convertYAMLTextToBYAML(stageYAML, mapName)
 
-            shutil.copy(f'assets/patched_byamls/{mapName}.byaml', stageBYAML)
-            convertFromBYAML(stageBYAML)
-            enemyRandomizer(stageYAML)
-            convertToBYAML(stageYAML)
-            os.remove(stageYAML)
-
-            packSARC(extractedFolder, mapFilePath, compress=True)
-            print('packing map archives')
-            #time.sleep(0.1)
-            shutil.rmtree(extractedFolder)
-            print('deleting map archives')
-
-def enemyRandomizer(stageYAML):
+def enemyRandomizer(yamlText, mapName):
     """Randomizes all the enemies in a stage, with logic applied so the player won't get stuck."""
     yaml = YAML()
     yaml.preserve_quotes = True
@@ -263,32 +249,32 @@ def enemyRandomizer(stageYAML):
 
     restrictedEnemies = ["Enm_Cleaner", "Enm_TakolienS", "Enm_Takodozer"] # Squee-G, Diving Octarian, Flooder
 
-    with open(stageYAML, 'r', encoding='utf-8') as file:
-        yamlData = yaml.load(file)
+    #with open(stageYAML, 'r', encoding='utf-8') as file:
+    stageYAML = yaml.load(yamlText)
 
     totalRandomized = 0
     logicReplaced = []
 
     # Randomize all the enemies first
-    for obj in yamlData["Objs"]:
+    for obj in stageYAML["Objs"]:
         unitConfigName = obj.get("UnitConfigName", "").strip()
         if unitConfigName == "Enm_Rival00": # Moves the Octoling locations in areas where you can reach them for the following stages
-            if "Propeller01" in stageYAML: # Propeller Lift Fortress
+            if "Propeller01" in mapName: # Propeller Lift Fortress
                 obj['Translate']['X'] = 650.0
                 obj['Translate']['Y'] = 350.0
                 obj['Translate']['Z'] = 660.0
 
-            if "Sponge01" in stageYAML: # Floating Sponge Observatory
+            if "Sponge01" in mapName: # Floating Sponge Observatory
                 obj['Translate']['X'] = 600.0
                 obj['Translate']['Y'] = 459.0
                 obj['Translate']['Z'] = -480.0
 
-            if "PaintingLift01" in stageYAML: # Spinning Spreaders
+            if "PaintingLift01" in mapName: # Spinning Spreaders
                 obj['Translate']['X'] = -100.0
                 obj['Translate']['Y'] = 210.0
                 obj['Translate']['Z'] = 0.0
 
-        if 'Dozer01' in stageYAML: # Far-Flung Flooders case
+        if 'Dozer01' in mapName: # Far-Flung Flooders case
                 if obj.get('Id') == 'obj116':
                     print('FFF')
                     obj["UnitConfigName"] = 'Enm_Cleaner' # Makes it so the enemy with the key properly spawns
@@ -298,7 +284,7 @@ def enemyRandomizer(stageYAML):
                     continue                
 
         if unitConfigName.startswith("Enm_") and unitConfigName != "Enm_TakopterTornado":
-            if obj.get('Id') in ['obj567', 'obj253'] and 'Trance00' in stageYAML: # Splat-Switch Revolution case
+            if obj.get('Id') in ['obj567', 'obj253'] and 'Trance00' in mapName: # Splat-Switch Revolution case
                 print('SSR Case')
                 continue
 
@@ -308,7 +294,7 @@ def enemyRandomizer(stageYAML):
 
     # Then, apply logic to reroll restricted enemies with Switch links
     # so the player won't get stuck in places where they have to defeat everything to progress
-    for obj in yamlData["Objs"]:
+    for obj in stageYAML["Objs"]:
         unitConfigName = obj.get("UnitConfigName", "").strip()
         objId = obj.get("Id", "Unknown")
 
@@ -321,22 +307,44 @@ def enemyRandomizer(stageYAML):
                 obj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
                 logicReplaced.append((objId, unitConfigName, newEnemy))
 
-    with open(stageYAML, 'w', encoding='utf-8') as file:
-        yaml.dump(yamlData, file)
+   # with open(stageYAML, 'w', encoding='utf-8') as file:
+    buf = io.StringIO()
+    yaml.dump(stageYAML, buf)
+    yamlText = buf.getvalue()
 
-    print(f"Total enemies randomized: {totalRandomized}")
+    print(f"Total enemies randomized: {totalRandomized}", flush=True)
     if logicReplaced:
-        print(f"Special logic replacements ({len(logicReplaced)}):")
+        print(f"Special logic replacements ({len(logicReplaced)}):", flush=True)
         for objId, oldEnemy, newEnemy in logicReplaced:
-            print(f"  - {objId}: {oldEnemy} → {newEnemy}")
+            print(f"  - {objId}: {oldEnemy} → {newEnemy}", flush=True)
+    return yamlText
 
 def randomizeEnemies(mapFolderPath):
-    extractMapFiles(mapFolderPath)
+    files = [f for f in os.listdir(mapFolderPath) if f.endswith("_Msn.szs") and not f.startswith("Fld_Boss")]
+    index = 0
+    extractMapFiles(files, mapFolderPath)
+    start = time.perf_counter()
     with ProcessPoolExecutor(max_workers = min(6, max(2, os.cpu_count() // 2))) as executor:
-        files = os.listdir(mapFolderPath)
-        for filename in files:
-            executor.submit(processMapFile, filename, mapFolderPath)
+       # files = os.listdir(mapFolderPath)
+        futures = [executor.submit(processMapFile, filename)
+                   for filename in files]
 
+        for fut in as_completed(futures):
+            try:
+                fut.result() 
+            except Exception as e:
+                print(f"Worker failed: {e}", flush=True)
+
+    end = time.perf_counter()
+    print(f"Randomizing enemies took {end - start:.3f} seconds")
+
+    for filename in files:
+        mapName = os.path.splitext(filename)[0]
+        extractedFolder = os.path.join(mapFolderPath, f'{mapName}.szs_extracted')
+        mapFilePath = os.path.join(mapFolderPath, filename)
+
+        packSARC(extractedFolder, mapFilePath, compress=True)
+        shutil.rmtree(extractedFolder)
 
 def updateBossStageNumbers(mapInfoYAML, bossStageNames): # Updates the MapInfo yaml with the correct boss stage numbers, this is seperate due to the different numbering pattern for bosses
                               # TODO: somehow merge this with updateStageNumber?
@@ -366,24 +374,6 @@ def updateBossStageNumbers(mapInfoYAML, bossStageNames): # Updates the MapInfo y
     with open(mapInfoYAML, 'w') as f:
         f.writelines(updatedBossStageNo)
         
-def randomizeHeroWeapon(platform):
-    randomWeapon = random.randint(0, 2)
-    if randomWeapon == 0:
-        return
-    elif randomWeapon == 1: # Hero Roller
-        if platform == 0: # Patches for Wii U
-            shutil.copy('patches/wiiu/HeroRollerInOctoValley.hax', 'patches/consoleWeaponPatches.hax')
-
-        elif platform == 1: # Patches for Cemu
-            shutil.copy('patches/cemu/heroRoller.txt', 'patches/cemu_OV_weapon.txt')
-
-    elif randomWeapon == 2: # Hero Charger
-        if platform == 0:
-            shutil.copy('patches/wiiu/HeroChargerInOctoValley.hax', 'patches/consoleWeaponPatches.hax')
-        
-        elif platform == 1:
-            shutil.copy('patches/cemu/heroCharger.txt', 'patches/cemu_OV_weapon.txt')
-
 def updateStageIcons(originalStageOrder, shuffledStageOrder):
     """
     Updates the stage icons to match the current randomized stages.
@@ -469,7 +459,7 @@ def addEditedWeaponUpgradeUI():
     packLayoutArchives('Wdm_Reinforce_00')
 
 def addLayoutEdits(options):
-    """Adds in the randomizer logo and the custom tutorial image and text."""
+    """Adds in the randomizer logo, the custom tutorial image and text."""
     extractLayoutArchives('Tut_TutorialPicture_00')
     extractLayoutArchives('Plz_Title_00')
 
@@ -540,10 +530,6 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     if options["missionDialogue"]:     
         print("Randomizing Dialogue")
         randomizeDialogue(splatoonFilesystemRoot)
-    
-    if options["heroWeapons"]:
-        print("Randomizing Hero Weapon")
-        randomizeHeroWeapon(options["platform"])
     
     if options["enemies"]:
         randomizeEnemies(mapFolderPath)

@@ -11,6 +11,7 @@ import importlib.util
 import subprocess
 
 import dependencycheck
+from python_bpspatcher.patcher import *
 
 globalGameDirectoryPath = '' 
 
@@ -105,7 +106,7 @@ def init():
             self.generateSeedButton.clicked.connect(self.generateSeed)
             self.setCentralWidget(centralWidget)
             self.inkColorSetDropdown.setEnabled(False)
-            self.randomizeButton.clicked.connect(lambda: self.startRandomization(self.splatoon1Path.text()))
+            self.randomizeButton.clicked.connect(lambda: self.startRandomization(self.splatoon1Path.text() + '/content'))
             self.actionCheck_for_Updates.triggered.connect(self.checkForUpdates)
             self.actionDocumentation.triggered.connect(self.openDocumentationPage)
             self.gameRegion = ''
@@ -143,7 +144,7 @@ def init():
 
         def openDirectoryDialog(self):
             global globalGameDirectoryPath
-            directoryPath = QFileDialog.getExistingDirectory(self, "Select the 'content' folder of your Splatoon 1 dump")
+            directoryPath = QFileDialog.getExistingDirectory(self, 'Select the folder containing the "code" and "content" folders of your Splatoon 1 dump.')
             if self.checkForValidGameFiles(directoryPath):
                 print(directoryPath)
                 print(self.gameRegion)
@@ -199,7 +200,7 @@ def init():
             except Exception as e:
                 return None
         
-        def checkGameFileHashes(self, packDir, messageDir, expected_hashes):
+        def checkGameFileHashes(self, codeFolder, packDir, messageDir, expected_hashes):
             """Checks if the selected Splatoon 1 dump is valid by comparing the necessary file hashes against expected ones."""
             allValid = True
 
@@ -213,6 +214,8 @@ def init():
                     actualFile = packPath
                 elif os.path.isfile(messagePath):
                     actualFile = messagePath
+                elif filename == "Gambit.rpx": # Special case for the executable
+                    actualFile = os.path.join(codeFolder, filename)
 
                 if actualFile:
                     actualHash = self.computeMD5(actualFile)
@@ -223,7 +226,7 @@ def init():
                         print(f"Valid {filename}")
                 else:
                     print(f"Missing {filename}")
-
+            
             return allValid
                 
         def checkGameRegion(self, messageDir):
@@ -243,11 +246,16 @@ def init():
 
         def checkForValidGameFiles(self, gameRoot):
             """Goes through a process to ensure that a (valid) Splatoon 1 dump has been selected."""
-            packFolder = os.path.join(gameRoot, 'Pack')
-            messageFolder = os.path.join(gameRoot, 'Message')
+            print(gameRoot)
+            if not os.path.isdir(os.path.join(gameRoot, 'code')) and not os.path.isdir(os.path.join(gameRoot, 'content')):
+                self.showErrorDialog('Error!', 'The "code" and/or "content" folders of your Splatoon 1 dump cannot be found!')
+                return False
+            packFolder = os.path.join(gameRoot + '/content', 'Pack')
+            messageFolder = os.path.join(gameRoot + '/content', 'Message')
+            codeFolder = os.path.join(gameRoot, 'code')
 
             if os.path.isdir(packFolder) and os.path.isdir(messageFolder): # Check if this is a Splatoon 1 dump
-                if self.checkGameFileHashes(packFolder, messageFolder, hashcollection.expected_hashes_2_12_1) == True: # If so, make sure that the selected dump is a valid 2.12.1 one
+                if self.checkGameFileHashes(codeFolder, packFolder, messageFolder, hashcollection.expected_hashes_2_12_1) == True: # If so, make sure that the selected dump is a valid 2.12.1 one
                     self.gameRegion = self.checkGameRegion(messageFolder)
                     self.titleID = self.getTitleID(self.gameRegion)
                     return True
@@ -282,38 +290,63 @@ def init():
             self.progressTextbox.setStyleSheet("color: green;")
             self.progressTextbox.setText("Randomization completed!")
             self.randomizeButton.setEnabled(True)  # Enable the randomize button again if initially disabled
+
+        def patchRPX(self, rpxPath, bpsPatchPath, outRPXPath):
+            """Patches a Splatoon 1 RPX with custom code used in the randomizer."""
+            with open(bpsPatchPath, "rb") as file:
+                bpsPatch = file.read()
+
+            patcher = BPSPatch(bpsPatch)
+
+            os.makedirs("original_rpx", exist_ok=True)
+            shutil.copy(rpxPath, "original_rpx/Gambit.rpx")
+
+            with open(rpxPath, "rb") as file:
+                rpxData = file.read()
+
+            patchedRPX = patcher.patch_rom(rpxData)
+
+            with open(outRPXPath, "wb") as file:
+                file.write(patchedRPX)
+            print('RPX patched!')
         
         def finalizeRandomization(self):
             """Moves all the randomized files to a dedicated output folder."""
             if self.platformDropdown.currentIndex() == 0: # For Wii U
                 
                 outputRandoDir = os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}')
+                
                 if os.path.isdir(outputRandoDir): # Yet another cleanup check
                     shutil.rmtree(outputRandoDir)
                 self.copyOutputRandomizer(outputRandoDir + '/content')
 
+                # Add in the randomizer code patches
+                shutil.copytree(f'patches/wiiu/', f'output/Wii U/{self.randomizerSeedBox.text()}/cafeloader/{self.titleID}', dirs_exist_ok=True)
+
             if self.platformDropdown.currentIndex() == 1: # For Cemu
+                codePath = self.splatoon1Path.text() + '/code/Gambit.rpx'
                 outputRandoDir = 'output/Cemu/' + f'{self.randomizerSeedBox.text()}/' + f'Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}'
                 if os.path.isdir(outputRandoDir):
                     shutil.rmtree(outputRandoDir)
+
                 self.copyOutputRandomizer(outputRandoDir + '/content')
-                with open ('assets/rules.txt', 'r') as file:
+                os.makedirs(outputRandoDir + '/code', exist_ok=True)
+                self.patchRPX(codePath, "patches/cemu/cemu_rando_patches.bps", outputRandoDir + '/code/Gambit.rpx')
+
+                with open('assets/rules.txt', 'r') as file:
                     cemuRulesTxt = file.read()
                 modifiedCemuRulesTxt = cemuRulesTxt.replace("{seed}", self.randomizerSeedBox.text())
                 
-                with open (outputRandoDir + '/rules.txt', "x") as file:
+                with open(outputRandoDir + '/rules.txt', "x") as file:
                     file.write(modifiedCemuRulesTxt)
+            
+            os.mkdir(outputRandoDir + '/content/Rando')
+            with open(outputRandoDir + "/content/Rando/seed.txt", 'x') as file:
+                file.write(self.randomizerSeedBox.text())
                 
             if self.options["heroWeapons"]:
-                if self.options["platform"] == 1:
-                    if os.path.exists('patches/cemu_OV_weapon.txt'):
-                        print("Copying weapon patches for Cemu")
-                        shutil.move("patches/cemu_OV_weapon.txt", outputRandoDir + '/patches.txt')
-                elif self.options["platform"] == 0:
-                    print('Copying weapon patches for Wii U')
-                    if os.path.exists('patches/consoleWeaponPatches.hax'):    
-                        os.makedirs(os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}'))
-                        shutil.move("patches/consoleWeaponPatches.hax", 'output/Wii U/' + f'{self.randomizerSeedBox.text()}/codepatches/{self.titleID}/OctoValleyWeaponPatches.hax')
+                with open(outputRandoDir + '/content/Rando/weapon_randomizer_on.bin', 'x') as file:
+                    file.write("Weapon rando on")
 
             
             shutil.rmtree("Splatoon_Rando_Files_work") # Cleanup
