@@ -1,5 +1,0 @@
-[OctoValleyWeaponChanger]
-moduleMatches = 0x659C782E
-
-0x0222D750 = li r3, 1 # Credits to Pirlo for this line, this makes it so that the roller's ammo will work correctly
-0x021a9b2c = li r5, 0x44c
