@@ -227,7 +227,7 @@ def processMapFile(filename):
 
 def enemyRandomizer(yamlText, mapName):
     """Randomizes all the enemies in a stage, with logic applied so the player won't get stuck."""
-    yaml = YAML()
+    yaml = YAML(typ='safe')
     yaml.preserve_quotes = True
 
     allEnemies = [
@@ -247,8 +247,12 @@ def enemyRandomizer(yamlText, mapName):
     #"Enm_TakopterTornado"
 ]
 
-    restrictedEnemies = ["Enm_Cleaner", "Enm_TakolienS", "Enm_Takodozer"] # Squee-G, Diving Octarian, Flooder
+    restrictedEnemies = {"Enm_Cleaner", "Enm_TakolienS", "Enm_Takodozer"} # Squee-G, Diving Octarian, Flooder
 
+    nonRestrictedEnemies = [
+    e for e in allEnemies
+    if e not in restrictedEnemies
+]
     #with open(stageYAML, 'r', encoding='utf-8') as file:
     stageYAML = yaml.load(yamlText)
 
@@ -257,19 +261,28 @@ def enemyRandomizer(yamlText, mapName):
 
     # Randomize all the enemies first
     for obj in stageYAML["Objs"]:
+        objId = obj.get("Id", "Unknown")
         unitConfigName = obj.get("UnitConfigName", "").strip()
+
+        if not unitConfigName.startswith("Enm_"):
+            continue
+        if unitConfigName == "Enm_TakopterTornado":
+            continue
+        if obj.get('Id') in {'obj567', 'obj253'} and 'Trance00' in mapName:
+            continue
+
         if unitConfigName == "Enm_Rival00": # Moves the Octoling locations in areas where you can reach them for the following stages
             if "Propeller01" in mapName: # Propeller Lift Fortress
                 obj['Translate']['X'] = 650.0
                 obj['Translate']['Y'] = 350.0
                 obj['Translate']['Z'] = 660.0
 
-            if "Sponge01" in mapName: # Floating Sponge Observatory
+            elif "Sponge01" in mapName: # Floating Sponge Observatory
                 obj['Translate']['X'] = 600.0
                 obj['Translate']['Y'] = 459.0
                 obj['Translate']['Z'] = -480.0
 
-            if "PaintingLift01" in mapName: # Spinning Spreaders
+            elif "PaintingLift01" in mapName: # Spinning Spreaders
                 obj['Translate']['X'] = -100.0
                 obj['Translate']['Y'] = 210.0
                 obj['Translate']['Z'] = 0.0
@@ -280,33 +293,25 @@ def enemyRandomizer(yamlText, mapName):
                     obj["UnitConfigName"] = 'Enm_Cleaner' # Makes it so the enemy with the key properly spawns
                     continue
                 if obj.get('Id') == 'obj361':
-                    obj["UnitConfigName"] = random.choice([e for e in allEnemies if e not in restrictedEnemies and e != "Enm_Ball"])
+                    obj["UnitConfigName"] = random.choice([e for e in nonRestrictedEnemies if e != "Enm_Ball"])
                     continue                
 
-        if unitConfigName.startswith("Enm_") and unitConfigName != "Enm_TakopterTornado":
-            if obj.get('Id') in ['obj567', 'obj253'] and 'Trance00' in mapName: # Splat-Switch Revolution case
-                print('SSR Case')
-                continue
-
-            newEnemy = random.choice(allEnemies)
-            obj["UnitConfigName"] = newEnemy
-            totalRandomized += 1
+        newEnemy = random.choice(allEnemies)
+        finalEnemy = newEnemy
+        totalRandomized += 1
 
     # Then, apply logic to reroll restricted enemies with Switch links
     # so the player won't get stuck in places where they have to defeat everything to progress
-    for obj in stageYAML["Objs"]:
-        unitConfigName = obj.get("UnitConfigName", "").strip()
-        objId = obj.get("Id", "Unknown")
 
-        if unitConfigName in restrictedEnemies:
+        if newEnemy in restrictedEnemies:
             links = obj.get("Links", {})
             switchLinks = next((v for k, v in links.items() if k.strip().lower() == "switch"), [])
             if switchLinks:
-                newEnemy = random.choice([e for e in allEnemies if e not in restrictedEnemies])
-                obj["UnitConfigName"] = newEnemy
+                finalEnemy = random.choice([e for e in allEnemies if e not in restrictedEnemies])
                 obj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
                 logicReplaced.append((objId, unitConfigName, newEnemy))
 
+    obj["UnitConfigName"] = finalEnemy
    # with open(stageYAML, 'w', encoding='utf-8') as file:
     buf = io.StringIO()
     yaml.dump(stageYAML, buf)
@@ -316,7 +321,7 @@ def enemyRandomizer(yamlText, mapName):
     if logicReplaced:
         print(f"Special logic replacements ({len(logicReplaced)}):", flush=True)
         for objId, oldEnemy, newEnemy in logicReplaced:
-            print(f"  - {objId}: {oldEnemy} → {newEnemy}", flush=True)
+            print(f"  - {objId}: {oldEnemy} -> {newEnemy}", flush=True)
     return yamlText
 
 def randomizeEnemies(mapFolderPath):
@@ -324,6 +329,7 @@ def randomizeEnemies(mapFolderPath):
     index = 0
     extractMapFiles(files, mapFolderPath)
     start = time.perf_counter()
+    
     with ProcessPoolExecutor(max_workers = min(6, max(2, os.cpu_count() // 2))) as executor:
        # files = os.listdir(mapFolderPath)
         futures = [executor.submit(processMapFile, filename)
