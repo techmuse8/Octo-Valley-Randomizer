@@ -58,8 +58,6 @@ def randomizeKettles(ctx: RandomizerContext):
     bossStageNames.append('Fld_BossRailKing_Bos_Msn')
 
     addRandomizedKettles(f"{str(ctx.world00ArchivePath)}_extracted/Fld_World00_Wld.yaml", stageNames)
-    print(bossStageNames)
-    print(stageNames)
     updateStageNumbers(ctx.mapInfoYAML, stageNames)
     updateBossStageNumbers(ctx.mapInfoYAML, bossStageNames)
     updateStageIcons(ctx, ogFullStageNames, stageNames)
@@ -146,10 +144,10 @@ def addVSInkColors(ctx: RandomizerContext, setting):
             elif setting == 2:
                 chosenColorSet = random.choice([vsInkColors, msnInkColors])
                 if 'GfxSetting_Vss' in chosenColorSet[i]:
-                    print('Picked a VS color')
+                    logging.debug('Picked a VS color')
                     shutil.move(os.path.join(workFolder, file), os.path.join(parameterPath, msnInkColors[i]))
                 elif 'GfxSetting_Msn' in chosenColorSet[i]:
-                    print('Picked a Msn color')
+                    logging.debug('Picked a Msn color')
                     continue
 
 
@@ -157,7 +155,7 @@ def delete4RandomInkColors(folderPath, count=4):
     files = [f for f in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, f))]
 
     if len(files) < count:
-        print(f"Only found {len(files)} file(s); deleting all of them.")
+        logging.debug(f"Only found {len(files)} file(s); deleting all of them.")
         count = len(files)
 
     filesToDelete = random.sample(files, count)
@@ -165,11 +163,11 @@ def delete4RandomInkColors(folderPath, count=4):
     for file in filesToDelete:
         fullPath = os.path.join(folderPath, file)
         os.remove(fullPath)
-      #  print(f"Deleted: {file}")
+        logging.debug(f"Deleted: {file}")
 
 
 def updateStageNumbers(mapInfoYAMLPath, stageNames): # Updates the MapInfo yaml with the correct stage numbers so collecting Zapfish will work correctly
-    print(mapInfoYAMLPath)
+  #  print(mapInfoYAMLPath)
     with open(mapInfoYAMLPath, 'r') as f:
         mapInfoYamlLines = f.readlines()
 
@@ -228,7 +226,7 @@ def dialogueRandomizer(msbtPath):
 def extractMapFiles(mapFiles, mapFolderPath):
     for filename in mapFiles:
         mapFilePath = os.path.join(mapFolderPath, filename)
-        print(mapFilePath)
+        logging.debug(mapFilePath)
         extractSARC(mapFilePath)
             
 def processMapFile(filename):
@@ -301,7 +299,7 @@ def enemyRandomizer(yamlText, mapName):
 
         if 'Dozer01' in mapName: # Far-Flung Flooders case
                 if obj.get('Id') == 'obj116':
-                    print('FFF')
+                    logging.debug('FFF case')
                     obj["UnitConfigName"] = 'Enm_Cleaner' # Makes it so the enemy with the key properly spawns
                     continue
                 if obj.get('Id') == 'obj361':
@@ -329,11 +327,11 @@ def enemyRandomizer(yamlText, mapName):
     yaml.dump(stageYAML, buf)
     yamlText = buf.getvalue()
 
-    print(f"Total enemies randomized: {totalRandomized}", flush=True)
+    logging.debug(f"Total enemies randomized: {totalRandomized}", flush=True)
     if logicReplaced:
-        print(f"Special logic replacements ({len(logicReplaced)}):", flush=True)
+        logging.debug(f"Special logic replacements ({len(logicReplaced)}):", flush=True)
         for objId, oldEnemy, newEnemy in logicReplaced:
-            print(f"  - {objId}: {oldEnemy} -> {newEnemy}", flush=True)
+            logging.debug(f"  - {objId}: {oldEnemy} -> {newEnemy}", flush=True)
     return yamlText
 
 def randomizeEnemies(mapFolderPath):
@@ -354,7 +352,7 @@ def randomizeEnemies(mapFolderPath):
                 print(f"Worker failed: {e}", flush=True)
 
     end = time.perf_counter()
-    print(f"Randomizing enemies took {end - start:.3f} seconds")
+    logging.info(f"Randomizing enemies took {end - start:.3f} seconds")
 
     for filename in files:
         mapName = os.path.splitext(filename)[0]
@@ -413,9 +411,9 @@ def updateStageIcons(ctx: RandomizerContext, originalStageOrder, shuffledStageOr
     remappedDir.mkdir(exist_ok=True)
 
 
-    print("Generated mapping:")
+    logging.debug("Generated mapping:")
     for old_stage, new_index in oldToNewStageMapping.items():
-        print(f"Old: {old_stage} -> New: {str(new_index).zfill(2)}")
+        logging.debug(f"Old: {old_stage} -> New: {str(new_index).zfill(2)}")
     
     for filename in os.listdir(stageIconDir):
         if filename.endswith('^q.bflim') and filename.startswith('MsnStageIcon_'):
@@ -430,9 +428,9 @@ def updateStageIcons(ctx: RandomizerContext, originalStageOrder, shuffledStageOr
                 newFilePath = remappedDir / newFilename
                 oldFilePath.rename(newFilePath)
 
-                print(f'Renamed: {filename} -> {newFilename}')
+                logging.debug(f'Renamed: {filename} -> {newFilename}')
             else:
-                print(f"WARNING: No new stage number found for {ogStageName}")
+                logging.warning(f"WARNING: No new stage number found for {ogStageName}")
     
     for filePath in remappedDir.iterdir():
         shutil.move(str(filePath), str(stageIconDir))
@@ -472,9 +470,9 @@ def rebuildStaticPack(ctx: RandomizerContext):
                 filePath = os.path.join(dirpath, filename)
                 try:
                     os.remove(filePath)
-                    print(f"Deleted: {filePath}")
+                    logging.debug(f"Deleted: {filePath}")
                 except OSError as e:
-                    print(f"Error deleting {filePath}: {e}")
+                    logging.error(f"Error deleting {filePath}: {e}")
     if ctx.isKettles:
         packSARC(f"{str(ctx.world00ArchivePath)}_extracted", str(ctx.world00ArchivePath), compress=True)
         shutil.rmtree(f"{str(ctx.world00ArchivePath)}_extracted") # Cleanup

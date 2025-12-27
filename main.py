@@ -1,6 +1,7 @@
 import sys
 import random
 import string
+import traceback
 from pathlib import Path
 import shutil
 import os
@@ -31,6 +32,7 @@ def init():
         QLabel,
         QProgressBar,
         QMessageBox,
+        QSizePolicy,
     )
     from packaging import version
     import requests
@@ -44,6 +46,7 @@ def init():
             progressUpdated = pyqtSignal(int)  # Emit an integer value for progress
             statusUpdated = pyqtSignal(str)     # Emit a string for status messages
             randomizationCompleted = pyqtSignal()
+            randomizationFailed = pyqtSignal(str)
             def __init__(self, splatoon1DirectoryPath: str, options: dict, seed: str, parent=None):
                 super().__init__(parent)
                 self.splatoon1DirectoryPath = splatoon1DirectoryPath
@@ -59,11 +62,14 @@ def init():
                         self.randomizationCompleted.emit()
                         self.statusUpdated.emit("Randomization completed!")
                     else:
+                        self.randomizationFailed.emit()
                         self.progressUpdated.emit("Randomization failed!")
                 except Exception as e:
-                    print(f"Error in worker thread: {e}")  
+                    logging.error(f"Error in worker thread: {e}")
+                    tracebackText = traceback.format_exc()
+                    self.randomizationFailed.emit(tracebackText)
                     self.statusUpdated.emit("An error occurred during randomization.")
-                    self.progressUpdated.emit(0)
+                    self.progressUpdated.emit("Randomization failed!")
                 
     class ProgressDialog(QDialog):
         def __init__(self, parent=None):
@@ -146,18 +152,18 @@ def init():
             global globalGameDirectoryPath
             directoryPath = QFileDialog.getExistingDirectory(self, 'Select the folder containing the "code" and "content" folders of your Splatoon 1 dump.')
             if self.checkForValidGameFiles(directoryPath):
-                print(directoryPath)
-                print(self.gameRegion)
+               # print(directoryPath)
+               # print(self.gameRegion)
                 globalGameDirectoryPath = directoryPath
                 self.splatoon1Path.setText(directoryPath)
                 self.updateRandomizeButtonState()
-                print(self.titleID)
+               # print(self.titleID)
 
         def generateSeed(self):
             characters = string.ascii_letters + string.digits
             randomString = ''.join(random.choice(characters) for i in range(10))
             self.randomizerSeedBox.setText(randomString)
-            print("Seed: " + randomString)
+            logging.info("Seed: " + randomString)
 
         def updateRandomizeButtonState(self):
             anyChecked = any(checkbox.isChecked() for checkbox in self.checkboxes)
@@ -220,19 +226,19 @@ def init():
                 if actualFile:
                     actualHash = self.computeMD5(actualFile)
                     if actualHash != expectedHash:
-                        print(f"Invalid file hash for {filename}: expected {expectedHash}, got {actualHash} instead")
+                        logging.error(f"Invalid file hash for {filename}: expected {expectedHash}, got {actualHash} instead")
                         allValid = False
                     else:
-                        print(f"Valid {filename}")
+                        logging.info(f"Valid {filename}")
                 else:
-                    print(f"Missing {filename}")
+                    logging.warning(f"Missing {filename}")
             
             return allValid
                 
         def checkGameRegion(self, messageDir):
             messageFiles = os.listdir(messageDir)
             for filename in messageFiles:
-                print
+               # print
                 if "EU" in filename:
                     return "EU"
                 elif "US" in filename:
@@ -246,7 +252,7 @@ def init():
 
         def checkForValidGameFiles(self, gameRoot):
             """Goes through a process to ensure that a (valid) Splatoon 1 dump has been selected."""
-            print(gameRoot)
+           # print(gameRoot)
             if not os.path.isdir(os.path.join(gameRoot, 'code')) and not os.path.isdir(os.path.join(gameRoot, 'content')):
                 self.showErrorDialog('Error!', 'The "code" and/or "content" folders of your Splatoon 1 dump cannot be found!')
                 return False
@@ -282,6 +288,26 @@ def init():
                 """Update progress message in the textbox."""
                 self.progressTextbox.setText(message)
         
+        def onRandomizationError(self, tracebackText):
+            """Handle any randomization errors."""
+            self.progressTextbox.setStyleSheet("color: red;")
+
+            self.progressTextbox.setText("Randomization failed!")
+            self.randomizeButton.setEnabled(True)
+
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Randomization Error")
+            msg.setText("An error occurred during randomization! Check the details for more information.")
+            msg.setDetailedText(tracebackText)
+            msg.setSizeGripEnabled(True)
+            msg.setWindowFlags(msg.windowFlags() | Qt.Window)
+
+            result = msg.exec_()
+
+            if result == QMessageBox.Ok:
+                QTimer.singleShot(1000, self.progressDialog.close)
+
         def randomizationCompleted(self):
             """Handle completion of randomization."""
             QTimer.singleShot(1000, self.progressDialog.close)
@@ -308,7 +334,7 @@ def init():
 
             with open(outRPXPath, "wb") as file:
                 file.write(patchedRPX)
-            print('RPX patched!')
+            logging.info('RPX patched!')
         
         def finalizeRandomization(self):
             """Moves all the randomized files to a dedicated output folder."""
@@ -389,6 +415,7 @@ def init():
             #self.worker.progressUpdated.connect(self.progressDialog.updateProgress)
             self.worker.statusUpdated.connect(self.progressDialog.setStatus)
             self.worker.randomizationCompleted.connect(self.randomizationCompleted)
+            self.worker.randomizationFailed.connect(self.onRandomizationError)
             self.worker.start()  # Start the thread
 
             
@@ -417,8 +444,6 @@ def init():
     window.show()
     app.exec()
 
-
-
 def main():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     logFilename = f"logs/randomizer_log_{timestamp}.txt"
@@ -428,7 +453,7 @@ def main():
 
     logging.basicConfig(
     filename=logFilename,
-    level=logging.ERROR,
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
