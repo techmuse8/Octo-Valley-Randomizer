@@ -310,11 +310,11 @@ def init():
 
         def randomizationCompleted(self):
             """Handle completion of randomization."""
-            QTimer.singleShot(1000, self.progressDialog.close)
             self.finalizeRandomization()
             
             self.progressTextbox.setStyleSheet("color: green;")
             self.progressTextbox.setText("Randomization completed!")
+            QTimer.singleShot(1000, self.progressDialog.close)
             self.randomizeButton.setEnabled(True)  # Enable the randomize button again if initially disabled
 
         def patchRPX(self, rpxPath, bpsPatchPath, outRPXPath):
@@ -389,6 +389,7 @@ def init():
             self.progressTextbox.setText("Randomizing: Please wait...")
             self.progressTextbox.setStyleSheet("color: black;")
             QApplication.processEvents()
+            os.makedirs("tmp", exist_ok=True)
 
             if os.path.isdir("Splatoon_Rando_Files_work"): # Clean up check
                 shutil.rmtree("Splatoon_Rando_Files_work")

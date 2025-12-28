@@ -237,7 +237,7 @@ def processMapFile(filename):
 
 def enemyRandomizer(yamlText, mapName):
     """Randomizes all the enemies in a stage, with logic applied so the player won't get stuck."""
-    yaml = YAML(typ='safe')
+    yaml = YAML()
     yaml.preserve_quotes = True
 
     allEnemies = [
@@ -321,7 +321,7 @@ def enemyRandomizer(yamlText, mapName):
                 obj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
                 logicReplaced.append((objId, unitConfigName, newEnemy))
 
-    obj["UnitConfigName"] = finalEnemy
+        obj["UnitConfigName"] = finalEnemy
    # with open(stageYAML, 'w', encoding='utf-8') as file:
     buf = io.StringIO()
     yaml.dump(stageYAML, buf)
@@ -359,6 +359,7 @@ def randomizeEnemies(mapFolderPath):
         extractedFolder = os.path.join(mapFolderPath, f'{mapName}.szs_extracted')
         mapFilePath = os.path.join(mapFolderPath, filename)
 
+        shutil.move(f"tmp/{mapName}.byaml", f"{extractedFolder}/{mapName}.byaml")
         packSARC(extractedFolder, mapFilePath, compress=True)
         shutil.rmtree(extractedFolder)
 
