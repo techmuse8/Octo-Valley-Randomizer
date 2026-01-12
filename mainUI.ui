@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>790</width>
-    <height>570</height>
+    <width>788</width>
+    <height>566</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,243 +23,269 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="mainLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <layout class="QGridLayout" name="gridLayout">
-        <property name="sizeConstraint">
-         <enum>QLayout::SetDefaultConstraint</enum>
-        </property>
-        <property name="leftMargin">
-         <number>10</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="generateSeedButton">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Main</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <layout class="QGridLayout" name="gridLayout">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetDefaultConstraint</enum>
+            </property>
+            <property name="leftMargin">
+             <number>10</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="browseButton">
+              <property name="text">
+               <string>Browse...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="splatoon1Path">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="randomizerSeedBox">
+              <property name="placeholderText">
+               <string>If left blank, a seed will be randomly generated.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="generateSeedButton">
+              <property name="text">
+               <string>Generate Seed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Seed:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Splatoon 1 Files:</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>10</number>
+          </property>
+          <property name="leftMargin">
+           <number>12</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="1" column="0" alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="kettlesCheckbox">
+              <property name="whatsThis">
+               <string extracomment="This is X"/>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="text">
+               <string>Kettles</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1" alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="enemyCheckBox">
+              <property name="text">
+               <string>Enemies</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="missionDialogueCheckBox">
+              <property name="text">
+               <string>Mission Dialogue</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2" alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="musicCheckBox">
+              <property name="text">
+               <string>Music</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="2" alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="checkBox">
+              <property name="text">
+               <string>Item Drops</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="inkColorCheckBox">
+              <property name="text">
+               <string>Ink Colors</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="inkColorSetDropdown">
+              <item>
+               <property name="text">
+                <string>Octo Valley Ink Colors</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Multiplayer Ink Colors</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Octo Valley and Multiplayer Ink Colors</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="5" column="0" alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="heroWeaponCheckBox">
+              <property name="text">
+               <string>Hero Weapons</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="platformLayout">
+          <property name="leftMargin">
+           <number>21</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item alignment="Qt::AlignLeft">
+           <widget class="QComboBox" name="platformDropdown">
+            <property name="maximumSize">
+             <size>
+              <width>170</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <item>
+             <property name="text">
+              <string>Platform: Wii U</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Platform: Cemu</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item alignment="Qt::AlignHCenter">
+         <widget class="QPushButton" name="randomizeButton">
+          <property name="minimumSize">
+           <size>
+            <width>250</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>250</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
           <property name="text">
-           <string>Generate Seed</string>
+           <string>Randomize</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Splatoon 1 Files:</string>
+        <item alignment="Qt::AlignHCenter">
+         <widget class="QLineEdit" name="progressTextbox">
+          <property name="minimumSize">
+           <size>
+            <width>400</width>
+            <height>0</height>
+           </size>
           </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="randomizerSeedBox">
-          <property name="placeholderText">
-           <string>If left blank, a seed will be randomly generated.</string>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
           </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="browseButton">
-          <property name="text">
-           <string>Browse...</string>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="splatoon1Path">
           <property name="readOnly">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Seed:</string>
-          </property>
-         </widget>
-        </item>
        </layout>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <property name="spacing">
-       <number>10</number>
-      </property>
-      <property name="leftMargin">
-       <number>12</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>8</number>
-      </property>
-      <item>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="1" column="2" alignment="Qt::AlignHCenter">
-         <widget class="QCheckBox" name="musicCheckBox">
-          <property name="text">
-           <string>Music</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1" alignment="Qt::AlignHCenter">
-         <widget class="QCheckBox" name="inkColorCheckBox">
-          <property name="text">
-           <string>Ink Colors</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0" alignment="Qt::AlignHCenter">
-         <widget class="QCheckBox" name="heroWeaponCheckBox">
-          <property name="text">
-           <string>Hero Weapons</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QComboBox" name="inkColorSetDropdown">
-          <item>
-           <property name="text">
-            <string>Octo Valley Ink Colors</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Multiplayer Ink Colors</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Octo Valley and Multiplayer Ink Colors</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="1" column="0" alignment="Qt::AlignHCenter">
-         <widget class="QCheckBox" name="kettlesCheckbox">
-          <property name="whatsThis">
-           <string extracomment="This is X"/>
-          </property>
-          <property name="layoutDirection">
-           <enum>Qt::LeftToRight</enum>
-          </property>
-          <property name="text">
-           <string>Kettles</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3" alignment="Qt::AlignHCenter">
-         <widget class="QCheckBox" name="missionDialogueCheckBox">
-          <property name="text">
-           <string>Mission Dialogue</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1" alignment="Qt::AlignHCenter">
-         <widget class="QCheckBox" name="enemyCheckBox">
-          <property name="text">
-           <string>Enemies</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="platformLayout">
-      <property name="leftMargin">
-       <number>21</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <item alignment="Qt::AlignLeft">
-       <widget class="QComboBox" name="platformDropdown">
-        <property name="maximumSize">
-         <size>
-          <width>170</width>
-          <height>40</height>
-         </size>
-        </property>
-        <property name="frame">
-         <bool>true</bool>
-        </property>
-        <item>
-         <property name="text">
-          <string>Platform: Wii U</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Platform: Cemu</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item alignment="Qt::AlignHCenter">
-     <widget class="QPushButton" name="randomizeButton">
-      <property name="minimumSize">
-       <size>
-        <width>250</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>250</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>Randomize</string>
-      </property>
-     </widget>
-    </item>
-    <item alignment="Qt::AlignHCenter">
-     <widget class="QLineEdit" name="progressTextbox">
-      <property name="minimumSize">
-       <size>
-        <width>400</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>400</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Misc. Options</string>
+       </attribute>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -269,7 +295,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>790</width>
+     <width>788</width>
      <height>22</height>
     </rect>
    </property>
@@ -281,6 +307,13 @@
     <addaction name="separator"/>
     <addaction name="actionDocumentation"/>
    </widget>
+   <widget class="QMenu" name="menuFile_2">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen_Output_Folder"/>
+   </widget>
+   <addaction name="menuFile_2"/>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -292,6 +325,11 @@
   <action name="actionDocumentation">
    <property name="text">
     <string>Documentation</string>
+   </property>
+  </action>
+  <action name="actionOpen_Output_Folder">
+   <property name="text">
+    <string>Open Output Folder</string>
    </property>
   </action>
  </widget>

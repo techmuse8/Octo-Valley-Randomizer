@@ -10,6 +10,7 @@ import logging
 import datetime
 import importlib.util
 import subprocess
+import webbrowser
 
 import dependencycheck
 from python_bpspatcher.patcher import *
@@ -32,7 +33,6 @@ def init():
         QLabel,
         QProgressBar,
         QMessageBox,
-        QSizePolicy,
     )
     from packaging import version
     import requests
@@ -114,6 +114,7 @@ def init():
             self.inkColorSetDropdown.setEnabled(False)
             self.randomizeButton.clicked.connect(lambda: self.startRandomization(self.splatoon1Path.text() + '/content'))
             self.actionCheck_for_Updates.triggered.connect(self.checkForUpdates)
+            self.actionOpen_Output_Folder.triggered.connect(self.openOutputFolder)
             self.actionDocumentation.triggered.connect(self.openDocumentationPage)
             self.gameRegion = ''
             self.randomizerVersion = '0.1.1'
@@ -170,6 +171,11 @@ def init():
             pathText = self.splatoon1Path.text().strip()
             hasValidPath = len(pathText) > 0
             self.randomizeButton.setEnabled(anyChecked and hasValidPath)
+
+        def openOutputFolder(self):
+            if not os.path.exists("output"):
+                os.makedirs("output")
+            webbrowser.open("output")
 
         def checkForUpdates(self):
             githubResponse = requests.get("https://api.github.com/repos/techmuse8/Octo-Valley-Randomizer/releases/latest")
@@ -417,7 +423,7 @@ def init():
             self.worker.statusUpdated.connect(self.progressDialog.setStatus)
             self.worker.randomizationCompleted.connect(self.randomizationCompleted)
             self.worker.randomizationFailed.connect(self.onRandomizationError)
-            self.worker.start()  # Start the thread
+            self.worker.start()
 
             
 
