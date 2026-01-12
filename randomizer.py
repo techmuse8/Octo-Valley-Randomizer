@@ -139,7 +139,7 @@ def addVSInkColors(ctx: RandomizerContext, setting):
     vsInkColors = []
     msnInkColors = []
 
-    if setting == 1 or 2:
+    if setting in (1, 2):
         for file in sorted(os.listdir(parameterPath)):
             if 'GfxSetting_Vss' in file:
                 shutil.copy(os.path.join(parameterPath, file), (os.path.join(parameterPath, "work")))
@@ -301,8 +301,6 @@ def applyItemRandomizer(stageObj, rng, settings):
 
 def applyEnemyRandomizer(enemyObj, rng, mapName):
     """Randomizes all the enemies in a stage, with logic applied so the player won't get stuck."""
-    yaml = YAML()
-    yaml.preserve_quotes = True
 
     allEnemies = [
     "Enm_Ball",
@@ -369,16 +367,42 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
     # Then, apply logic to reroll restricted enemies with Switch links
     # so the player won't get stuck in places where they have to defeat every enemy to progress
 
-        if newEnemy in restrictedEnemies:
-            links = obj.get("Links", {})
-            switchLinks = next((v for k, v in links.items() if k.strip().lower() == "switch"), [])
-            if switchLinks:
-                finalEnemy = random.choice([e for e in allEnemies if e not in restrictedEnemies])
-                obj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
-                logicReplaced.append((objId, unitConfigName, newEnemy))
+    if newEnemy in restrictedEnemies:
+        links = enemyObj.get("Links", {})
+        switchLinks = next((v for k, v in links.items() if k.strip().lower() == "switch"), [])
+        if switchLinks:
+            finalEnemy = rng.choice([e for e in allEnemies if e not in restrictedEnemies])
+            enemyObj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
+            logicReplaced.append((enemyObj.get('Id'), enemyObj['UnitConfigName'], newEnemy))
+    
+    # print(f"Total enemies randomized: {totalRandomized}", flush=True)
+    # if logicReplaced:
+    #     print(f"Special logic replacements ({len(logicReplaced)}):", flush=True)
+    #     for objId, oldEnemy, newEnemy in logicReplaced:
+    #         print(f"  - {objId}: {oldEnemy} -> {newEnemy}", flush=True)
+                
 
-        obj["UnitConfigName"] = finalEnemy
-   # with open(stageYAML, 'w', encoding='utf-8') as file:
+def processMapYAML(yamlText, mapName, rng: random):
+    """A multi purpose function for batch editing map YAMLs."""
+    yaml = YAML()
+    yaml.preserve_quotes = True
+
+    stageYAML = yaml.load(yamlText)
+    settings = None
+    enemiesRandomized = 0
+
+    for obj in stageYAML["Objs"]:
+      #  objId = obj.get("Id", "Unknown")
+        unitConfigName = obj.get("UnitConfigName", "").strip()
+            
+        if unitConfigName.startswith("Obj_Box") or unitConfigName.startswith("Enm_"):
+            applyItemRandomizer(obj, rng, settings)
+
+        if unitConfigName.startswith("Enm_"):
+            applyEnemyRandomizer(obj, rng, mapName)
+            enemiesRandomized += 1
+        
+
     buf = io.StringIO()
     yaml.dump(stageYAML, buf)
     yamlText = buf.getvalue()
@@ -415,7 +439,6 @@ def randomizeEnemies(ctx: RandomizerContext, mapFolderPath):
         extractedFolder = os.path.join(mapFolderPath, f'{mapName}.szs_extracted')
         mapFilePath = os.path.join(mapFolderPath, filename)
 
-        shutil.move(f"tmp/{mapName}.byaml", f"{extractedFolder}/{mapName}.byaml")
         shutil.move(f"tmp/{mapName}.byaml", f"{extractedFolder}/{mapName}.byaml")
         packSARC(extractedFolder, mapFilePath, compress=True)
         shutil.rmtree(extractedFolder)
