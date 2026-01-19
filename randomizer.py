@@ -60,8 +60,8 @@ def randomizeKettles(ctx: RandomizerContext):
     ogFullStageNames = stageNames
     stageNames = stageNames[:-5]
 
-    random.shuffle(stageNames)
-    random.shuffle(bossStageNames)
+    ctx.rng.shuffle(stageNames)
+    ctx.rng.shuffle(bossStageNames)
     
     for item in bossStageNames:
         stageNames.append(item)
@@ -635,7 +635,7 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         convertToBYAML(f"{str(ctx.world00ArchivePath)}_extracted/Fld_World00_Wld.yaml")
 
     if options["music"]:
-        print("Randomizing mMusic")
+        print("Randomizing music")
         randomizeMusic(ctx.rng, ctx.mapInfoYAML)
 
     if options["inkColors"]:   

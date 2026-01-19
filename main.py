@@ -175,7 +175,7 @@ def init():
         def openOutputFolder(self):
             if not os.path.exists("output"):
                 os.makedirs("output")
-            webbrowser.open("output")
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str('output')))
 
         def checkForUpdates(self):
             githubResponse = requests.get("https://api.github.com/repos/techmuse8/Octo-Valley-Randomizer/releases/latest")
@@ -291,8 +291,8 @@ def init():
                     shutil.copy(f'Splatoon_Rando_Files_work/Message/{entry}', f'{outputRandoDir}/Message/')
 
         def updateProgress(self, message):
-                """Update progress message in the textbox."""
-                self.progressTextbox.setText(message)
+            """Update progress message in the textbox."""
+            self.progressTextbox.setText(message)
         
         def onRandomizationError(self, tracebackText):
             """Handle any randomization errors."""
@@ -424,9 +424,6 @@ def init():
             self.worker.randomizationCompleted.connect(self.randomizationCompleted)
             self.worker.randomizationFailed.connect(self.onRandomizationError)
             self.worker.start()
-
-            
-
 
     def exceptionHook(exctype, value, traceback):
             logging.exception("Unhandled exception:", exc_info=(exctype, value, traceback))
