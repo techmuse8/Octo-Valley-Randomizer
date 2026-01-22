@@ -34,6 +34,7 @@ class RandomizerContext:
     world00ArchivePath: Path | None = None
     isKettles: bool = False
     seed: str = None
+    randoOptions: dict = None
 
     rng: random.Random | None = field(init=False, default=None)
 
@@ -249,7 +250,7 @@ def processMapFile(ctx: RandomizerContext, filename):
 
         mapName = os.path.splitext(filename)[0]
         stageBYAMLConv = convertBYAMLToYAMLText(f'assets/patched_byamls/{mapName}.byaml')
-        stageYAML = processMapYAML(stageBYAMLConv, mapName, mapRng)
+        stageYAML = processMapYAML(stageBYAMLConv, mapName, mapRng, ctx.randoOptions)
         convertYAMLTextToBYAML(stageYAML, mapName)
 
 def applyItemRandomizer(stageObj, rng, settings):
@@ -288,14 +289,55 @@ def applyItemRandomizer(stageObj, rng, settings):
         MissionItem.PowerEgg6: 7,
     }
 
-    if stageObj['DropId'] == BannedMissionItem.Key or BannedMissionItem.SunkenScroll:
+    highPowerupWeights = { 
+        MissionItem.Armor: 9,
+        MissionItem.PowerEgg1: 3,
+        MissionItem.PowerEgg2: 3,
+        MissionItem.PowerEgg3: 3,
+        MissionItem.BubblerCan: 9,
+        MissionItem.InkzookaCan: 8,
+        MissionItem.Nothing: 7,
+        MissionItem.BombRushCan: 8,
+        MissionItem.PowerEgg4: 3,
+        MissionItem.PowerEgg5: 3,
+        MissionItem.PowerEgg6: 3,
+    }
+    # I don't need to make a weights dict for this setting, but eh
+    uniformPowerupWeights = { 
+        MissionItem.Armor: 1,
+        MissionItem.PowerEgg1: 1,
+        MissionItem.PowerEgg2: 1,
+        MissionItem.PowerEgg3: 1,
+        MissionItem.BubblerCan: 1,
+        MissionItem.InkzookaCan: 1,
+        MissionItem.Nothing: 1,
+        MissionItem.BombRushCan: 1,
+        MissionItem.PowerEgg4: 1,
+        MissionItem.PowerEgg5: 1,
+        MissionItem.PowerEgg6: 1,
+    }
+
+    class WeightOption(IntEnum):
+        LowPowerups = 0
+        HighPowerups = 1
+        UniformItems = 2
+
+    selectedItemWeights = 0
+    if settings == WeightOption.LowPowerups:
+        selectedItemWeights = lowPowerupWeights
+    elif settings == WeightOption.HighPowerups:
+        selectedItemWeights = highPowerupWeights
+    elif settings == WeightOption.UniformItems:
+        selectedItemWeights = uniformPowerupWeights
+
+    if stageObj['DropId'] in (BannedMissionItem.Key, BannedMissionItem.SunkenScroll):
      #   print('Skipping key and/or sunken scroll')
         return
 
-    items = [item.name for item in lowPowerupWeights.keys()]
-    itemWeights = list(lowPowerupWeights.values())
+    items = [item.name for item in selectedItemWeights.keys()]
+    itemWeights = list(selectedItemWeights.values())
 
-    selectedItem = rng.choices(items, lowPowerupWeights=itemWeights, k=1)[0]
+    selectedItem = rng.choices(items, weights=itemWeights, k=1)[0]
   #  print(MissionItem[selectedItem].value)
     stageObj['DropId'] = MissionItem[selectedItem].value
 
@@ -352,7 +394,7 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
 
     if 'Dozer01' in mapName: # Far-Flung Flooders case
             if enemyObj.get('Id') == 'obj116':
-                print('FFF case')
+               # print('FFF case')
                 enemyObj["UnitConfigName"] = 'Enm_Cleaner' # Makes it so the enemy with the key properly spawns
 
             if enemyObj.get('Id') == 'obj361':
@@ -362,7 +404,6 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
     newEnemy = rng.choice(allEnemies)
     finalEnemy = newEnemy
     totalRandomized += 1
-    enemyObj["UnitConfigName"] = finalEnemy
 
     # Then, apply logic to reroll restricted enemies with Switch links
     # so the player won't get stuck in places where they have to defeat every enemy to progress
@@ -374,6 +415,8 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
             finalEnemy = rng.choice([e for e in allEnemies if e not in restrictedEnemies])
             enemyObj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
             logicReplaced.append((enemyObj.get('Id'), enemyObj['UnitConfigName'], newEnemy))
+
+    enemyObj["UnitConfigName"] = finalEnemy
     
     # print(f"Total enemies randomized: {totalRandomized}", flush=True)
     # if logicReplaced:
@@ -382,25 +425,25 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
     #         print(f"  - {objId}: {oldEnemy} -> {newEnemy}", flush=True)
                 
 
-def processMapYAML(yamlText, mapName, rng: random):
+def processMapYAML(yamlText, mapName, rng: random, settings: dict):
     """A multi purpose function for batch editing map YAMLs."""
     yaml = YAML()
     yaml.preserve_quotes = True
 
     stageYAML = yaml.load(yamlText)
-    settings = None
     enemiesRandomized = 0
 
     for obj in stageYAML["Objs"]:
-      #  objId = obj.get("Id", "Unknown")
         unitConfigName = obj.get("UnitConfigName", "").strip()
-            
-        if unitConfigName.startswith("Obj_Box") or unitConfigName.startswith("Enm_"):
-            applyItemRandomizer(obj, rng, settings)
 
-        if unitConfigName.startswith("Enm_"):
-            applyEnemyRandomizer(obj, rng, mapName)
-            enemiesRandomized += 1
+        if settings["enemies"]:
+            if unitConfigName.startswith("Enm_"):
+                applyEnemyRandomizer(obj, rng, mapName)
+                enemiesRandomized += 1
+
+        if settings["itemDrops"]:
+            if unitConfigName.startswith("Obj_Box") or unitConfigName.startswith("Enm_"):
+                applyItemRandomizer(obj, rng, settings["itemDropSet"])
         
 
     buf = io.StringIO()
@@ -414,7 +457,8 @@ def processMapYAML(yamlText, mapName, rng: random):
     #         logging.debug(f"  - {objId}: {oldEnemy} -> {newEnemy}", flush=True)
     return yamlText
 
-def randomizeEnemies(ctx: RandomizerContext, mapFolderPath):
+def initMapArcWorker(ctx: RandomizerContext, mapFolderPath):
+    """Initializes a worker to batch process map archives for object manipulation."""
     files = [f for f in sorted(os.listdir(mapFolderPath)) if f.endswith("_Msn.szs") and not f.startswith("Fld_Boss")]
     index = 0
     extractMapFiles(files, mapFolderPath)
@@ -432,7 +476,7 @@ def randomizeEnemies(ctx: RandomizerContext, mapFolderPath):
                 print(f"Worker failed: {e}", flush=True)
 
     end = time.perf_counter()
-    logging.info(f"Randomizing enemies took {end - start:.3f} seconds")
+    logging.info(f"Map object manipulation took {end - start:.3f} seconds")
 
     for filename in files:
         mapName = os.path.splitext(filename)[0]
@@ -605,7 +649,7 @@ def performFinishingTouches(ctx: RandomizerContext, options, splatoonFilesystemR
         addLayoutEdits(ctx, options)
         addCustomText(splatoonFilesystemRoot)
     
-def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
+def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options: dict):
    # random.seed(randomizerSeed)
 
     ctx = RandomizerContext(
@@ -614,7 +658,8 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
     staticPackDir=Path(splatoonFilesystemRoot) / "Pack/Static.pack_extracted",
     layoutDir=Path(splatoonFilesystemRoot) / "Pack/Layout.pack_extracted/Layout",
     mapInfoYAML=None,
-    seed = randomizerSeed
+    seed = randomizerSeed,
+    randoOptions = options
 )
 
     mapFolderPath = ctx.root / 'Pack' / 'Static.pack_extracted' / 'Map'
@@ -646,10 +691,11 @@ def setupRandomization(splatoonFilesystemRoot, randomizerSeed, options):
         print("Randomizing dialogue")
         randomizeDialogue(ctx, str(ctx.root))
     
-    if options["enemies"]:
-        randomizeEnemies(ctx, mapFolderPath)
+    if options["enemies"] or options["itemDrops"]:
+        print("Preparing to start the map arc worker")
+        initMapArcWorker(ctx, mapFolderPath)
 
-    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"] or options["enemies"]:
+    if options["kettles"] or options["inkColors"] or options["music"] or options["heroWeapons"] or options["enemies"] or options["itemDrops"]:
         convertToBYAML(ctx.mapInfoYAML)
         rebuildStaticPack(ctx)
 

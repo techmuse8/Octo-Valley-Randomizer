@@ -112,6 +112,7 @@ def init():
             self.generateSeedButton.clicked.connect(self.generateSeed)
             self.setCentralWidget(centralWidget)
             self.inkColorSetDropdown.setEnabled(False)
+            self.itemDropSetDropdown.setEnabled(False)
             self.randomizeButton.clicked.connect(lambda: self.startRandomization(self.splatoon1Path.text() + '/content'))
             self.actionCheck_for_Updates.triggered.connect(self.checkForUpdates)
             self.actionOpen_Output_Folder.triggered.connect(self.openOutputFolder)
@@ -126,6 +127,7 @@ def init():
                             }
             self.options = {}
             self.inkColorCheckBox.stateChanged.connect(self.updateInkColorDropdownState)
+            self.itemDropCheckBox.stateChanged.connect(self.updateItemDropDropdownState)
             
             self.checkboxes = self.findChildren(QCheckBox)
             for checkbox in self.checkboxes:
@@ -194,12 +196,18 @@ def init():
 
         def openDocumentationPage(self):
             QDesktopServices.openUrl(QUrl("https://github.com/techmuse8/Octo-Valley-Randomizer/wiki"))
-
+        # TODO: Make a general dropdown state updater method
         def updateInkColorDropdownState(self, state):
             if state == Qt.Checked:
                 self.inkColorSetDropdown.setEnabled(True)
             else:
                 self.inkColorSetDropdown.setEnabled(False)
+
+        def updateItemDropDropdownState(self, state):
+            if state == Qt.Checked:
+                self.itemDropSetDropdown.setEnabled(True)
+            else:
+                self.itemDropSetDropdown.setEnabled(False)
 
         def computeMD5(self, filepath):
             """Compute the MD5 hash of a file."""
@@ -413,10 +421,11 @@ def init():
                 "missionDialogue": self.missionDialogueCheckBox.isChecked(),
                 "platform": self.platformDropdown.currentIndex(),
                 "enemies": self.enemyCheckBox.isChecked(),
+                "itemDrops": self.itemDropCheckBox.isChecked(),
+                "itemDropSet": self.itemDropSetDropdown.currentIndex(),
             }
 
             self.options = options
-            
             
             self.worker = RandomizationWorker("Splatoon_Rando_Files_work", options, currentSeed)
             #self.worker.progressUpdated.connect(self.progressDialog.updateProgress)
@@ -457,7 +466,7 @@ def main():
 
     logging.basicConfig(
     filename=logFilename,
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s'
     )
 

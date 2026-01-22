@@ -129,7 +129,7 @@
              </widget>
             </item>
             <item row="5" column="2" alignment="Qt::AlignHCenter">
-             <widget class="QCheckBox" name="checkBox">
+             <widget class="QCheckBox" name="itemDropCheckBox">
               <property name="text">
                <string>Item Drops</string>
               </property>
@@ -190,7 +190,10 @@
              </widget>
             </item>
             <item row="6" column="2">
-             <widget class="QComboBox" name="comboBox">
+             <widget class="QComboBox" name="itemDropSetDropdown">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Favor Power Eggs:&lt;/span&gt; Makes it so that you are more likely to get Power Egg drops over specials/armor. Recommended for a more balanced experience.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Favor Powerups:&lt;/span&gt; Makes it so that you are more likely to get specials/armor drops over Power Eggs. Recommended for a less balanced experience.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Completely Random:&lt;/span&gt; Makes it so that the selected items are completely random. Recommended for a more chaotic experience.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <item>
                <property name="text">
                 <string>Favor Power Eggs</string>
@@ -198,7 +201,7 @@
               </item>
               <item>
                <property name="text">
-                <string>Favor Special Cans</string>
+                <string>Favor Powerups</string>
                </property>
               </item>
               <item>
@@ -315,7 +318,7 @@
      <x>0</x>
      <y>0</y>
      <width>788</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
