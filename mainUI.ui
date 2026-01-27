@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>788</width>
-    <height>566</height>
+    <height>546</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -307,6 +307,61 @@
        <attribute name="title">
         <string>Misc. Options</string>
        </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <property name="leftMargin">
+           <number>48</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="skipOVIntroCheckBox">
+            <property name="text">
+             <string>Skip Octo Valley Intro Cutscene</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="skipNewsIntroCheckBox">
+            <property name="text">
+             <string>Skip First News Intro</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>195</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

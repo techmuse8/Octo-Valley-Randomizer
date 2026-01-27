@@ -10,7 +10,7 @@ import logging
 import datetime
 import importlib.util
 import subprocess
-import webbrowser
+import configparser
 
 import dependencycheck
 from python_bpspatcher.patcher import *
@@ -126,6 +126,8 @@ def init():
                 "JP": "0005000010162B00"
                             }
             self.options = {}
+            self.miscSettings = configparser.ConfigParser()
+            self.miscSettings.optionxform = str
             self.inkColorCheckBox.stateChanged.connect(self.updateInkColorDropdownState)
             self.itemDropCheckBox.stateChanged.connect(self.updateItemDropDropdownState)
             
@@ -385,8 +387,13 @@ def init():
                 file.write(self.randomizerSeedBox.text())
                 
             if self.options["heroWeapons"]:
-                with open(outputRandoDir + '/content/Rando/weapon_randomizer_on.bin', 'x') as file:
-                    file.write("Weapon rando on")
+                self.miscSettings['RandomizerSettings']['WeaponRandomizer'] = '1'
+
+            self.miscSettings['RandomizerSettings']['SkipOctoValleyIntro'] = f"{int(self.skipOVIntroCheckBox.isChecked())}"
+            self.miscSettings['RandomizerSettings']['SkipFirstNews'] = f"{int(self.skipNewsIntroCheckBox.isChecked())}"
+
+            with open(outputRandoDir + '/content/Rando/config.ini', 'x') as configfile:
+                self.miscSettings.write(configfile)
 
             
             shutil.rmtree("Splatoon_Rando_Files_work") # Cleanup
@@ -453,6 +460,13 @@ def init():
 
     app = QApplication(sys.argv)
     window = MainWindow()
+
+    window.miscSettings['RandomizerSettings'] = { 
+        'WeaponRandomizer': '0',
+        'SkipOctoValleyIntro': '0',
+        'SkipFirstNews': '0'
+    }
+
     sys.mainWindow = window
     window.show()
     app.exec()
