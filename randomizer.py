@@ -42,8 +42,6 @@ class RandomizerContext:
         """Initializes the RNG instance."""
         if self.seed is not None:
             self.rng = random.Random(self.seed)
-     #   else:
-      #      self.rng = random.Random()
 
 
 def randomizeKettles(ctx: RandomizerContext):
