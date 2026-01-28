@@ -247,7 +247,7 @@ def init():
                     else:
                         logging.info(f"Valid {filename}")
                 else:
-                    logging.warning(f"Missing {filename}")
+                    logging.warning(f"Missing {filename}: Likely for another region")
             
             return allValid
                 
@@ -391,6 +391,7 @@ def init():
 
             self.miscSettings['RandomizerSettings']['SkipOctoValleyIntro'] = f"{int(self.skipOVIntroCheckBox.isChecked())}"
             self.miscSettings['RandomizerSettings']['SkipFirstNews'] = f"{int(self.skipNewsIntroCheckBox.isChecked())}"
+            self.miscSettings['RandomizerSettings']['OctoValleyRestart'] = f"{int(self.addOVRestartCheckBox.isChecked())}"
 
             with open(outputRandoDir + '/content/Rando/config.ini', 'x') as configfile:
                 self.miscSettings.write(configfile)
@@ -464,7 +465,8 @@ def init():
     window.miscSettings['RandomizerSettings'] = { 
         'WeaponRandomizer': '0',
         'SkipOctoValleyIntro': '0',
-        'SkipFirstNews': '0'
+        'SkipFirstNews': '0',
+        'OctoValleyRestart': '0'
     }
 
     sys.mainWindow = window
@@ -480,7 +482,7 @@ def main():
 
     logging.basicConfig(
     filename=logFilename,
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
     )
 

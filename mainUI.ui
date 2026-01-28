@@ -310,6 +310,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <property name="spacing">
+           <number>25</number>
+          </property>
           <property name="leftMargin">
            <number>48</number>
           </property>
@@ -321,25 +324,16 @@
            </widget>
           </item>
           <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Fixed</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <widget class="QCheckBox" name="skipNewsIntroCheckBox">
             <property name="text">
              <string>Skip First News Intro</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="addOVRestartCheckBox">
+            <property name="text">
+             <string>Add Restart Option to Octo Valley's Pause Menu</string>
             </property>
            </widget>
           </item>
