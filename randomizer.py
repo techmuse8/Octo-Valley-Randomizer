@@ -251,6 +251,7 @@ def processMapFile(ctx: RandomizerContext, filename):
         stageYAML = processMapYAML(stageBYAMLConv, mapName, mapRng, ctx.randoOptions)
         convertYAMLTextToBYAML(stageYAML, mapName)
 
+
 def applyItemRandomizer(stageObj, rng, settings):
     # This list purposely excludes the key (10), Sunken Scroll (9), and the Battle Dojo powerup item (17).
     # Item 17 in particular does not work in Octo Valley stages
@@ -339,7 +340,7 @@ def applyItemRandomizer(stageObj, rng, settings):
   #  print(MissionItem[selectedItem].value)
     stageObj['DropId'] = MissionItem[selectedItem].value
 
-def applyEnemyRandomizer(enemyObj, rng, mapName):
+def applyEnemyRandomizer(enemyObj, rng, mapName: str, stageContext):
     """Randomizes all the enemies in a stage, with logic applied so the player won't get stuck."""
 
     allEnemies = [
@@ -347,7 +348,7 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
     "Enm_Charge",
     "Enm_Cleaner",
     "Enm_Hohei",
-    #"Enm_Rival00",
+  #  "Enm_Rival00", # Out for now until I figure out how they work
     "Enm_Stamp",
     "Enm_Takodozer",
     "Enm_Takolien",
@@ -397,11 +398,19 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
 
             if enemyObj.get('Id') == 'obj361':
                 enemyObj["UnitConfigName"] = rng.choice([e for e in nonRestrictedEnemies if e != "Enm_Ball"])
-            
 
     newEnemy = rng.choice(allEnemies)
     finalEnemy = newEnemy
     totalRandomized += 1
+    # Limit the amount of Octostrikers in an Octostriker level to be work around various glitches
+    # and softlocks that occur after defeating them in the final checkpoint section on the UFO
+    if mapName.startswith('Fld_Oct') and newEnemy == 'Enm_TakopterTornado':
+        if stageContext['octostrikerCountForInkstrikeLvl'] >= 1:
+            finalEnemy = rng.choice(
+                [e for e in allEnemies if e != "Enm_TakopterTornado"]
+            )
+        else:
+            stageContext['octostrikerCountForInkstrikeLvl'] += 1
 
     # Then, apply logic to reroll restricted enemies with Switch links
     # so the player won't get stuck in places where they have to defeat every enemy to progress
@@ -411,7 +420,7 @@ def applyEnemyRandomizer(enemyObj, rng, mapName):
         switchLinks = next((v for k, v in links.items() if k.strip().lower() == "switch"), [])
         if switchLinks:
             finalEnemy = rng.choice([e for e in allEnemies if e not in restrictedEnemies])
-            enemyObj['Translate']['Y'] += 16.0 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
+            enemyObj['Translate']['Y'] += 17.5 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
             logicReplaced.append((enemyObj.get('Id'), enemyObj['UnitConfigName'], newEnemy))
 
     enemyObj["UnitConfigName"] = finalEnemy
@@ -431,12 +440,14 @@ def processMapYAML(yamlText, mapName, rng: random, settings: dict):
     stageYAML = yaml.load(yamlText)
     enemiesRandomized = 0
 
+    stageContext = {"octostrikerCountForInkstrikeLvl": 1}
+
     for obj in stageYAML["Objs"]:
         unitConfigName = obj.get("UnitConfigName", "").strip()
 
         if settings["enemies"]:
             if unitConfigName.startswith("Enm_"):
-                applyEnemyRandomizer(obj, rng, mapName)
+                applyEnemyRandomizer(obj, rng, mapName, stageContext)
                 enemiesRandomized += 1
 
         if settings["itemDrops"]:
