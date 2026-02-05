@@ -368,12 +368,14 @@ def init():
             if self.platformDropdown.currentIndex() == 1: # For Cemu
                 codePath = self.splatoon1Path.text() + '/code/Gambit.rpx'
                 outputRandoDir = 'output/Cemu/' + f'{self.randomizerSeedBox.text()}/' + f'Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}'
+                outputRPXPath = 'output/Cemu/' + f'{self.randomizerSeedBox.text()}/Patched RPX/Gambit.rpx'
                 if os.path.isdir(outputRandoDir):
                     shutil.rmtree(outputRandoDir)
 
                 self.copyOutputRandomizer(outputRandoDir + '/content')
-                os.makedirs(outputRandoDir + '/code', exist_ok=True)
-                self.patchRPX(codePath, "patches/cemu/cemu_rando_patches.bps", outputRandoDir + '/code/Gambit.rpx')
+                
+                os.makedirs(os.path.dirname(outputRPXPath), exist_ok=True)
+                self.patchRPX(codePath, "patches/cemu/cemu_rando_patches.bps", outputRPXPath)
 
                 with open('assets/rules.txt', 'r') as file:
                     cemuRulesTxt = file.read()
