@@ -356,7 +356,7 @@ def init():
             """Moves all the randomized files to a dedicated output folder."""
             if self.platformDropdown.currentIndex() == 0: # For Wii U
                 
-                outputRandoDir = os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}')
+                outputRandoDir = os.path.join('output/Wii U/', f'{self.randomizerSeedBox.text()}/wiiu/sdcafiine/{self.titleID}/Octo Valley Randomizer - Seed {self.randomizerSeedBox.text()}')
                 
                 if os.path.isdir(outputRandoDir): # Yet another cleanup check
                     shutil.rmtree(outputRandoDir)
