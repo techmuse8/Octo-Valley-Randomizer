@@ -11,6 +11,8 @@ As of writing, these are the aspects that are able to be randomized/shuffled:
 - Mission dialogue
 - Stage music
 - Hero Weapons (the Hero Shot, Hero Roller, and Hero Charger)
+- Enemies
+- Item drops (with the option to choose between different item drop rates)
 
 ## Prerequisites 
 
