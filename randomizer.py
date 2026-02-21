@@ -469,7 +469,8 @@ def processMapYAML(yamlText, mapName, rng: random, settings: dict):
 def initMapArcWorker(ctx: RandomizerContext, mapFolderPath):
     """Initializes a worker to batch process map archives for object manipulation."""
     files = [f for f in sorted(os.listdir(mapFolderPath)) if f.endswith("_Msn.szs") and not f.startswith("Fld_Boss")]
-    files.append('Fld_BossRailKing_Bos_Msn.szs') # Special inclusion case for Octavio's boss stage
+   # files.append('Fld_BossRailKing_Bos_Msn.szs') # Special inclusion case for Octavio's boss stage
+   
     index = 0
     extractMapFiles(files, mapFolderPath)
     start = time.perf_counter()
