@@ -81,6 +81,7 @@ def init():
             layout = QVBoxLayout()
             self.label = QLabel("Starting randomization...", self)
             self.label.setAlignment(Qt.AlignCenter)
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowCloseButtonHint)
             layout.addWidget(self.label)
             self.progressBar = QProgressBar(self) 
             self.progressBar.setRange(0, 0)
