@@ -491,6 +491,11 @@ def main():
 
     logging.info("Application started.")
 
+    if sys.version_info.major == 3 and (sys.version_info.minor != 12):
+        print("This script requires Python 3.12 specifically!")
+        input("Press Enter to exit the application.")
+        sys.exit(1)
+
     # Here we check if the user has all of the dependencies installed or not
     for package, license in dependencycheck.dependencies.items():
         isAllDepsInstalled = dependencycheck.checkIsMissing(package, license)
