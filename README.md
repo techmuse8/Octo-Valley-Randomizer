@@ -19,7 +19,7 @@ As of writing, these are the aspects that are able to be randomized/shuffled:
 Requires [Python 3.12](https://www.python.org/downloads/release/python-3127/) with the following dependencies installed from pip: 
 
 > [!IMPORTANT]  
-> Due to issues with oead not installing on Python 3.12 and the library PyLibMS only working on Python versions 3.12+, the randomizer currently ONLY works with Python 3.12!
+> Due to issues with oead not installing on Python 3.12 and the library PyLibMS only working on Python versions 3.12+, the randomizer currently ONLY works with Python 3.12! A solution is currently being looked into to remove this restriction.
 
 - [PyQt5](https://pypi.org/project/PyQt5/)
 - [ruamel.yaml](https://pypi.org/project/ruamel.yaml/)
@@ -28,11 +28,11 @@ Requires [Python 3.12](https://www.python.org/downloads/release/python-3127/) wi
 - [requests](https://pypi.org/project/requests/)
 - [packaging](https://pypi.org/project/packaging)
 
-To run the randomizer assuming Python 3.12 or new is installed, simply open a command prompt/terminal session in the folder containing the randomizer, then run `python3 main.py`. (`python3` is to be replaced with `py -3` if you're on Windows.) Alternatively, Windows users can also just double-click the helper batch script named `run-randomizer-windows.bat`.
+To run the randomizer assuming Python 3.12 is installed, simply open a command prompt/terminal session in the folder containing the randomizer, then run `python3 main.py`. (`python3` is to be replaced with `py -3` if you're on Windows.) Alternatively, Windows users can also just double-click the helper batch script named `run-randomizer-windows.bat`.
 
 Upon running the randomizer, the program will check all of the above dependencies installed and if not, offer to install them should the user agree to do so.
 
-Alternatively, you can also run `python3 -m pip install --r requirements.txt` beforehand to install of the dependencies for you.
+Alternatively, you can also run `python3 (or py -3 on Windows) -m pip install --r requirements.txt` beforehand to install of the dependencies for you.
 
 This randomizer is compatiable with both real Wii U hardware using Aroma custom firmware (installation guide can be found [here](https://wiiu.hacks.guide/)) and the Cemu emulator. If you need details on how to legally obtain the files required to use the randomizer, consult [this guide](https://github.com/techmuse8/Octo-Valley-Randomizer/wiki/Dumping-Files-for-the-Randomizer) on the wiki. 
 
