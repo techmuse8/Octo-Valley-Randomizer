@@ -18,7 +18,6 @@ from python_bpspatcher.patcher import *
 globalGameDirectoryPath = '' 
 
 def init():
-    
     from PyQt5 import uic
     from PyQt5.QtGui import QIcon, QDesktopServices
     from PyQt5.QtCore import Qt, QSize, QUrl, QThread, pyqtSignal, QTimer
@@ -42,9 +41,31 @@ def init():
 
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
+    class UpdateChecker(QThread):
+        handleUpdateDialog = pyqtSignal(str, str, bool)
+        noUpdate = pyqtSignal()
+
+        def __init__(self, silentError):
+            super().__init__()
+            self.silentError = silentError
+
+        def run(self):
+            try:
+                response = requests.get("https://api.github.com/repos/techmuse8/Octo-Valley-Randomizer/releases/latest")
+                latestVersion = (response.json()["tag_name"])
+                latestVersionStripped = latestVersion.strip("v")
+                self.handleUpdateDialog.emit(latestVersionStripped, response.json()["html_url"], self.silentError)
+            
+            except Exception as e:
+                print("Update check failed:", e)
+                if self.silentError == True:
+                    pass
+                else: 
+                    return
+
     class RandomizationWorker(QThread):
-            progressUpdated = pyqtSignal(int)  # Emit an integer value for progress
-            statusUpdated = pyqtSignal(str)     # Emit a string for status messages
+            progressUpdated = pyqtSignal(int)
+            statusUpdated = pyqtSignal(str)
             randomizationCompleted = pyqtSignal()
             randomizationFailed = pyqtSignal(str)
             def __init__(self, splatoon1DirectoryPath: str, options: dict, seed: str, parent=None):
@@ -120,6 +141,7 @@ def init():
             self.actionDocumentation.triggered.connect(self.openDocumentationPage)
             self.gameRegion = ''
             self.randomizerVersion = '0.1.1'
+            self.updateChecker = None
             self.titleID = ''
             self.titleIDs = {
                 "US": "0005000010176900",
@@ -182,18 +204,22 @@ def init():
                 os.makedirs("output")
             QDesktopServices.openUrl(QUrl.fromLocalFile(str('output')))
 
-        def checkForUpdates(self):
-            githubResponse = requests.get("https://api.github.com/repos/techmuse8/Octo-Valley-Randomizer/releases/latest")
+        def checkForUpdates(self, silentError = False):
+            self.updateChecker = UpdateChecker(silentError)
+            self.updateChecker.handleUpdateDialog.connect(self.showUpdateDialog)
+            self.updateChecker.start()
+
+        def showUpdateDialog(self, latestVersion, updateUrl, silentError):
             currentVersion = version.parse(self.randomizerVersion)
-            latestVersion = (githubResponse.json()["tag_name"])
-            latestVersionStripped = version.parse(latestVersion.strip("v"))
-            if latestVersionStripped > currentVersion:
-                response = self.showMessageBox("Update Checker", f"Version: {latestVersionStripped} is now available! Would you like to visit the GitHub releases page to get the latest version?", 
+            latestVersion = version.parse(latestVersion)
+
+            if latestVersion > currentVersion:
+                response = self.showMessageBox("Update Checker", f"Version {latestVersion} is now available! Would you like to visit the GitHub releases page to get the latest version?", 
                                             QMessageBox.Question, QMessageBox.Yes | QMessageBox.No)
                 if response == QMessageBox.Yes:
-                    QDesktopServices.openUrl(QUrl((githubResponse.json()["html_url"])))
+                    QDesktopServices.openUrl(QUrl(updateUrl))
                 
-            elif latestVersionStripped == currentVersion:
+            elif latestVersion == currentVersion and silentError == False:
                 response = self.showMessageBox("Update Checker", f"You're on the latest version! ({currentVersion})", 
                                             QMessageBox.Information, QMessageBox.Yes)
 
@@ -474,6 +500,8 @@ def init():
 
     sys.mainWindow = window
     window.show()
+    silentError = True
+    window.checkForUpdates(silentError)
     app.exec()
 
 def main():
@@ -489,7 +517,7 @@ def main():
     format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-    logging.info("Application started.")
+    logging.debug("Application started.")
 
     if sys.version_info.major == 3 and (sys.version_info.minor != 12):
         print("This script requires Python 3.12 specifically!")
