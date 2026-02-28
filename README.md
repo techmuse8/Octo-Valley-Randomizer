@@ -42,9 +42,13 @@ The randomizer supports any region of the game on the latest update (version 2.1
 
 Please consult [the wiki](https://github.com/techmuse8/Octo-Valley-Randomizer/wiki) for information on how to use the randomizer tool and applying the randomizer patch onto your copy of the game.
 
+## Custom Code Patches
+If you're interested in looking at the source code for the patches, those can be found in this repo [here](https://github.com/techmuse8/Octo-Valley-Randomizer-Patches). A tutorial will be written soon on how to compile the patches.
 ## Credits
 
-- [Pirlo](https://twitter.com/0x1CAA9C5C) - Making a patch that lets the Hero Roller work properly in singleplayer
+- [Pirlo](https://twitter.com/0x1CAA9C5C) - Making a patch that lets the Hero Roller work properly in singleplayer, reverse engineering
 - [Archipelago Discord Server](https://discord.gg/8Z65BR2) - Feedback, feature suggestions
 - [Kinnay](https://github.com/kinnay) - Author of the .hax patch format used for code patching on real Wii U hardware
 - [theawesomecoder61](https://github.com/theawesomecoder61/) - Author of [CodePatchPlugin](https://github.com/theawesomecoder61/CodePatchPlugin), documentation of the .hax file format and the assembler that was used for creating the .hax patch files
+
+Until I get around to moving them over, the credits can be found in this document [here](https://docs.google.com/document/d/1TiUmw8RNokKciQDHbmgZV29CZrUNqfDoGPWYT2WNnqo/).
