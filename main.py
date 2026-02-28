@@ -64,33 +64,35 @@ def init():
                     return
 
     class RandomizationWorker(QThread):
-            progressUpdated = pyqtSignal(int)
-            statusUpdated = pyqtSignal(str)
-            randomizationCompleted = pyqtSignal()
-            randomizationFailed = pyqtSignal(str)
-            def __init__(self, splatoon1DirectoryPath: str, options: dict, seed: str, parent=None):
-                super().__init__(parent)
-                self.splatoon1DirectoryPath = splatoon1DirectoryPath
-                self.options = options
-                self.seed = seed
-            def run(self):
-                try:
-                    self.statusUpdated.emit("Randomizing: Please wait...")
-                    QApplication.processEvents()
+        progressUpdated = pyqtSignal(int)
+        statusUpdated = pyqtSignal(str)
+        randomizationCompleted = pyqtSignal()
+        randomizationFailed = pyqtSignal(str)
 
-                    success = randomizer.setupRandomization(self.splatoon1DirectoryPath, self.seed, self.options)
-                    if success:
-                        self.randomizationCompleted.emit()
-                        self.statusUpdated.emit("Randomization completed!")
-                    else:
-                        self.randomizationFailed.emit()
-                        self.progressUpdated.emit("Randomization failed!")
-                except Exception as e:
-                    logging.error(f"Error in worker thread: {e}")
-                    tracebackText = traceback.format_exc()
-                    self.randomizationFailed.emit(tracebackText)
-                    self.statusUpdated.emit("An error occurred during randomization.")
+        def __init__(self, splatoon1DirectoryPath: str, options: dict, seed: str, parent=None):
+            super().__init__(parent)
+            self.splatoon1DirectoryPath = splatoon1DirectoryPath
+            self.options = options
+            self.seed = seed
+
+        def run(self):
+            try:
+                self.statusUpdated.emit("Randomizing: Please wait...")
+                QApplication.processEvents()
+
+                success = randomizer.setupRandomization(self.splatoon1DirectoryPath, self.seed, self.options)
+                if success:
+                    self.randomizationCompleted.emit()
+                    self.statusUpdated.emit("Randomization completed!")
+                else:
+                    self.randomizationFailed.emit()
                     self.progressUpdated.emit("Randomization failed!")
+            except Exception as e:
+                logging.error(f"Error in worker thread: {e}")
+                tracebackText = traceback.format_exc()
+                self.randomizationFailed.emit(tracebackText)
+                self.statusUpdated.emit("An error occurred during randomization.")
+                self.progressUpdated.emit("Randomization failed!")
                 
     class ProgressDialog(QDialog):
         def __init__(self, parent=None):
@@ -140,7 +142,7 @@ def init():
             self.actionOpen_Output_Folder.triggered.connect(self.openOutputFolder)
             self.actionDocumentation.triggered.connect(self.openDocumentationPage)
             self.gameRegion = ''
-            self.randomizerVersion = '0.1.1'
+            self.randomizerVersion = '1.0.0'
             self.updateChecker = None
             self.titleID = ''
             self.titleIDs = {
@@ -153,6 +155,7 @@ def init():
             self.miscSettings.optionxform = str
             self.inkColorCheckBox.stateChanged.connect(self.updateInkColorDropdownState)
             self.itemDropCheckBox.stateChanged.connect(self.updateItemDropDropdownState)
+            self.randomizerSeedBox.setMaxLength(64)
             
             self.checkboxes = self.findChildren(QCheckBox)
             for checkbox in self.checkboxes:
@@ -225,6 +228,7 @@ def init():
 
         def openDocumentationPage(self):
             QDesktopServices.openUrl(QUrl("https://github.com/techmuse8/Octo-Valley-Randomizer/wiki"))
+            
         # TODO: Make a general dropdown state updater method
         def updateInkColorDropdownState(self, state):
             if state == Qt.Checked:
