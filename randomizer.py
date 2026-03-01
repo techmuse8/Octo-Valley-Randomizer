@@ -371,7 +371,9 @@ def applyEnemyRandomizer(enemyObj, rng, mapName: str, stageContext):
     logicReplaced = []
 
     if enemyObj['UnitConfigName'] == "Enm_TakopterTornado":
+        stageContext['octostrikerCountForInkstrikeLvl'] += 1
         return
+    
     if enemyObj.get('Id') in {'obj567', 'obj253'} and 'Trance00' in mapName:
         return
 
@@ -395,9 +397,11 @@ def applyEnemyRandomizer(enemyObj, rng, mapName: str, stageContext):
             if enemyObj.get('Id') == 'obj116':
                # print('FFF case')
                 enemyObj["UnitConfigName"] = 'Enm_Cleaner' # Makes it so the enemy with the key properly spawns
+                return
 
             if enemyObj.get('Id') == 'obj361':
                 enemyObj["UnitConfigName"] = rng.choice([e for e in nonRestrictedEnemies if e != "Enm_Ball"])
+                return
 
     newEnemy = rng.choice(allEnemies)
     finalEnemy = newEnemy
@@ -440,7 +444,7 @@ def processMapYAML(yamlText, mapName, rng: random, settings: dict):
     stageYAML = yaml.load(yamlText)
     enemiesRandomized = 0
 
-    stageContext = {"octostrikerCountForInkstrikeLvl": 1}
+    stageContext = {"octostrikerCountForInkstrikeLvl": 0}
 
     for obj in stageYAML["Objs"]:
         unitConfigName = obj.get("UnitConfigName", "").strip()
