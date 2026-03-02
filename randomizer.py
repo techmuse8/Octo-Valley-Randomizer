@@ -409,12 +409,9 @@ def applyEnemyRandomizer(enemyObj, rng, mapName: str, stageContext):
     # Limit the amount of Octostrikers in an Octostriker level to be work around various glitches
     # and softlocks that occur after defeating them in the final checkpoint section on the UFO
     if mapName.startswith('Fld_Oct') and newEnemy == 'Enm_TakopterTornado':
-        if stageContext['octostrikerCountForInkstrikeLvl'] >= 1:
-            finalEnemy = rng.choice(
-                [e for e in allEnemies if e != "Enm_TakopterTornado"]
-            )
-        else:
-            stageContext['octostrikerCountForInkstrikeLvl'] += 1
+        finalEnemy = rng.choice(
+            [e for e in nonRestrictedEnemies if e != "Enm_TakopterTornado"]
+        )
 
     # Then, apply logic to reroll restricted enemies with Switch links
     # so the player won't get stuck in places where they have to defeat every enemy to progress
