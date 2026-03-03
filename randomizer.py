@@ -407,7 +407,7 @@ def applyEnemyRandomizer(enemyObj, rng, mapName: str, stageContext):
     # and softlocks that occur after defeating them in the final checkpoint section on the UFO
     if mapName.startswith('Fld_Oct'):
         newEnemy = rng.choice(
-            [e for e in nonRestrictedEnemies if e != "Enm_TakopterTornado"]
+            [e for e in allEnemies if e != "Enm_TakopterTornado"]
         )
     else:
         newEnemy = rng.choice(allEnemies)
@@ -422,8 +422,11 @@ def applyEnemyRandomizer(enemyObj, rng, mapName: str, stageContext):
         links = enemyObj.get("Links", {})
         switchLinks = next((v for k, v in links.items() if k.strip().lower() == "switch"), [])
         if switchLinks:
-            finalEnemy = rng.choice([e for e in allEnemies if e not in restrictedEnemies])
-            enemyObj['Translate']['Y'] += 17.5 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
+            if mapName.startswith('Fld_Oct'):
+                finalEnemy = rng.choice([e for e in nonRestrictedEnemies if e != "Enm_TakopterTornado"])
+            else:
+                finalEnemy = rng.choice([e for e in allEnemies if e not in restrictedEnemies])
+            enemyObj['Translate']['Y'] += 18.5 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
             logicReplaced.append((enemyObj.get('Id'), enemyObj['UnitConfigName'], newEnemy))
 
     enemyObj["UnitConfigName"] = finalEnemy
