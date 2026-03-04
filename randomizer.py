@@ -429,14 +429,24 @@ def applyEnemyRandomizer(enemyObj, rng, mapName: str, stageContext):
             enemyObj['Translate']['Y'] += 18.5 # Let's try to account for cases where enemies might get stuck in terrain and be unkillable (i.e Octoballers)
             logicReplaced.append((enemyObj.get('Id'), enemyObj['UnitConfigName'], newEnemy))
 
+    # Set some default parameters for Flooders so that they'll consistently appear and not
+    # activate.
+    if finalEnemy == 'Enm_Takodozer':
+        for i in range(8):
+            enemyObj[f"FloatParameter{i}"] = -99.0
+        
+        enemyObj['Parameter0'] = 2
+        enemyObj['Parameter1'] = 1
+        enemyObj['Parameter2'] = 1
+        enemyObj['Parameter3'] = -99
+        enemyObj['Parameter4'] = 3
+
+        for i in range(3):
+            enemyObj[f"Parameter{i+5}"] = 99
+        
+        enemyObj["Links"].clear()
+
     enemyObj["UnitConfigName"] = finalEnemy
-    
-    # print(f"Total enemies randomized: {totalRandomized}", flush=True)
-    # if logicReplaced:
-    #     print(f"Special logic replacements ({len(logicReplaced)}):", flush=True)
-    #     for objId, oldEnemy, newEnemy in logicReplaced:
-    #         print(f"  - {objId}: {oldEnemy} -> {newEnemy}", flush=True)
-                
 
 def processMapYAML(yamlText, mapName, rng: random, settings: dict):
     """A multi purpose function for batch editing map YAMLs."""
@@ -445,6 +455,8 @@ def processMapYAML(yamlText, mapName, rng: random, settings: dict):
 
     stageYAML = yaml.load(yamlText)
     enemiesRandomized = 0
+
+    flooderObjIds = []
 
     stageContext = {"octostrikerCountForInkstrikeLvl": 0}
 
@@ -456,9 +468,24 @@ def processMapYAML(yamlText, mapName, rng: random, settings: dict):
                 applyEnemyRandomizer(obj, rng, mapName, stageContext)
                 enemiesRandomized += 1
 
+                if 'Takodozer' in obj.get("UnitConfigName", "") and 'Takodozer' not in unitConfigName:
+                    flooderObjIds.append(obj["Id"])
+
+
         if settings["itemDrops"]:
             if unitConfigName.startswith("Obj_Box") or unitConfigName.startswith("Enm_"):
                 applyItemRandomizer(obj, rng, settings["itemDropSet"])
+    
+    # We do a second pass to remove any SwitchSender links to newly randomized
+    # flooders, so the game won't crash on activation.
+    for obj in stageYAML["Objs"]:
+        links = obj.get("Links", {})
+        if isinstance(links, dict):
+            for linkType in list(links.keys()):
+                links[linkType] = [
+                    l for l in links[linkType]
+                    if l.get("DestUnitId") not in flooderObjIds
+                ]
         
 
     buf = io.StringIO()
