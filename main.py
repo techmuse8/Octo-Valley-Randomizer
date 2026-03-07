@@ -142,7 +142,7 @@ def init():
             self.actionOpen_Output_Folder.triggered.connect(self.openOutputFolder)
             self.actionDocumentation.triggered.connect(self.openDocumentationPage)
             self.gameRegion = ''
-            self.randomizerVersion = '1.0.1'
+            self.randomizerVersion = '1.0.2'
             self.updateChecker = None
             self.titleID = ''
             self.titleIDs = {
