@@ -18,10 +18,9 @@ from python_bpspatcher.patcher import *
 globalGameDirectoryPath = '' 
 
 def init():
-    from PyQt5 import uic
-    from PyQt5.QtGui import QIcon, QDesktopServices
-    from PyQt5.QtCore import Qt, QSize, QUrl, QThread, pyqtSignal, QTimer
-    from PyQt5.QtWidgets import (
+    from PySide6.QtGui import QIcon, QDesktopServices
+    from PySide6.QtCore import Qt, QSize, QUrl, QThread, Signal, QTimer
+    from PySide6.QtWidgets import (
         QApplication,
         QCheckBox,
         QMainWindow,
@@ -33,6 +32,8 @@ def init():
         QProgressBar,
         QMessageBox,
     )
+    from mainUI import Ui_MainWindow
+
     from packaging import version
     import requests
 
@@ -42,8 +43,8 @@ def init():
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
     class UpdateChecker(QThread):
-        handleUpdateDialog = pyqtSignal(str, str, bool)
-        noUpdate = pyqtSignal()
+        handleUpdateDialog = Signal(str, str, bool)
+        noUpdate = Signal()
 
         def __init__(self, silentError):
             super().__init__()
@@ -64,10 +65,10 @@ def init():
                     return
 
     class RandomizationWorker(QThread):
-        progressUpdated = pyqtSignal(int)
-        statusUpdated = pyqtSignal(str)
-        randomizationCompleted = pyqtSignal()
-        randomizationFailed = pyqtSignal(str)
+        progressUpdated = Signal(int)
+        statusUpdated = Signal(str)
+        randomizationCompleted = Signal()
+        randomizationFailed = Signal(str)
 
         def __init__(self, splatoon1DirectoryPath: str, options: dict, seed: str, parent=None):
             super().__init__(parent)
@@ -118,11 +119,10 @@ def init():
         def setStatus(self, message):
             self.label.setText(message)
         
-    class MainWindow(QMainWindow):
+    class MainWindow(QMainWindow, Ui_MainWindow):
         def __init__(self):
             super().__init__()
-            
-            uic.loadUi('mainUI.ui', self)
+            self.setupUi(self)
 
             centralWidget = self.findChild(QWidget, 'centralwidget')
             self.setCentralWidget(centralWidget)
@@ -231,13 +231,13 @@ def init():
             
         # TODO: Make a general dropdown state updater method
         def updateInkColorDropdownState(self, state):
-            if state == Qt.Checked:
+            if state == Qt.CheckState.Checked.value:
                 self.inkColorSetDropdown.setEnabled(True)
             else:
                 self.inkColorSetDropdown.setEnabled(False)
 
         def updateItemDropDropdownState(self, state):
-            if state == Qt.Checked:
+            if state == Qt.CheckState.Checked.value:
                 self.itemDropSetDropdown.setEnabled(True)
             else:
                 self.itemDropSetDropdown.setEnabled(False)
